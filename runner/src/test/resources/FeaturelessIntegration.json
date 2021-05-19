@@ -1,0 +1,35 @@
+{
+  "@class": "com.devexperts.switchboard.impl.FeaturelessIntegration",
+  "identifier": "FeaturelessIntegration-1",
+  "runnable": true,
+  "testExtractors": [],
+  "testProcessors": [],
+  "testFilters": [
+    {
+      "@class": "com.devexperts.switchboard.impl.filters.AttributesFilter",
+      "identifier": "AttributesFilter-1",
+      "attributePredicate": {
+        "@class": "com.devexperts.switchboard.entities.attributes.AttributeIsPresent",
+        "attributeKeyRegex": "key1"
+      }
+    }
+  ],
+  "testSplitters": [
+    {
+      "@class": "com.devexperts.switchboard.impl.splitters.AttributeKeySplitter",
+      "identifier": "AttributeKeySplitter-1",
+      "attributeKeys": [
+        "key1",
+        "key2"
+      ]
+    },
+    {
+      "@class": "com.devexperts.switchboard.impl.splitters.AttributeSingleValueSplitter",
+      "identifier": "AttributeSingleValueSplitter-1",
+      "attributeKey": "key1",
+      "attributeValueKey": "valueKey1"
+    }
+  ],
+  "testRunProcessors": [],
+  "testRunConsumers": []
+}

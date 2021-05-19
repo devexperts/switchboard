@@ -1,0 +1,68 @@
+{
+  "id": 0,
+  "name": "Default",
+  "href": "/httpAuth/app/rest/agentPools/id:0",
+  "projects": {},
+  "agents": {
+    "count": 10,
+    "href": "/httpAuth/app/rest/agents?locator=pool:(id:0),defaultFilter:false",
+    "agent": [
+      {
+        "id": 1,
+        "name": "Agent1",
+        "typeId": 1,
+        "connected": false,
+        "enabled": false,
+        "authorized": false,
+        "uptodate": false,
+        "href": "/httpAuth/app/rest/agents/id:1",
+        "webUrl": "https://teamcity.somewhere.com/agentDetails.html?id=1&agentTypeId=1&realAgentName=Agent0-1"
+      },
+      {
+        "id": 2,
+        "name": "Agent2",
+        "typeId": 2,
+        "connected": false,
+        "enabled": false,
+        "authorized": false,
+        "uptodate": false,
+        "href": "/httpAuth/app/rest/agents/id:2",
+        "webUrl": "https://teamcity.somewhere.com/agentDetails.html?id=2&agentTypeId=2&realAgentName=Agent5-1"
+      },
+      {
+        "id": 3,
+        "name": "Agent3",
+        "typeId": 3,
+        "connected": false,
+        "enabled": false,
+        "authorized": false,
+        "uptodate": false,
+        "href": "/httpAuth/app/rest/agents/id:3",
+        "webUrl": "https://teamcity.somewhere.com/agentDetails.html?id=3&agentTypeId=3&realAgentName=Agent5-1"
+      },
+      {
+        "id": 4,
+        "name": "Agent4",
+        "typeId": 4,
+        "connected": false,
+        "enabled": false,
+        "authorized": false,
+        "uptodate": false,
+        "href": "/httpAuth/app/rest/agents/id:4",
+        "webUrl": "https://teamcity.somewhere.com/agentDetails.html?id=4&agentTypeId=4&realAgentName=Agent5-1"
+      },
+      {
+        "id": 5,
+        "name": "Agent5",
+        "typeId": 5,
+        "connected": false,
+        "enabled": false,
+        "authorized": false,
+        "uptodate": false,
+        "href": "/httpAuth/app/rest/agents/id:5",
+        "webUrl": "https://teamcity.somewhere.com/agentDetails.html?id=5&agentTypeId=5&realAgentName=Agent5-1"
+      }
+    ]
+  },
+  "locator": null
+}

@@ -1,0 +1,28 @@
+/**
+ * Copyright (C) 2002 - 2021 Devexperts LLC
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/.
+ */
+
+repositories {
+    jcenter()
+}
+
+dependencies {
+    implementation "io.swagger:swagger-annotations:1.5.17"
+
+    implementation "org.glassfish.jersey.core:jersey-client:$jerseyVersion"
+    implementation "org.glassfish.jersey.inject:jersey-hk2:$jerseyVersion"
+    implementation "org.glassfish.jersey.media:jersey-media-multipart:$jerseyVersion"
+    implementation "org.glassfish.jersey.media:jersey-media-json-jackson:$jerseyVersion"
+    implementation "org.glassfish.jersey.media:jersey-media-jaxb:$jerseyVersion"
+    implementation "com.fasterxml.jackson.core:jackson-core:$jacksonVersion"
+    implementation "com.fasterxml.jackson.core:jackson-annotations:$jacksonVersion"
+    implementation "com.fasterxml.jackson.core:jackson-databind:$jacksonVersion"
+    implementation "com.fasterxml.jackson.dataformat:jackson-dataformat-xml:$jacksonVersion"
+    implementation "com.github.joschi.jackson:jackson-datatype-threetenbp:2.6.4"
+    implementation "com.brsanthu:migbase64:2.2"
+    implementation "org.glassfish.jaxb:jaxb-runtime:2.3.3"
+    implementation "jakarta.xml.bind:jakarta.xml.bind-api:2.3.2"
+}

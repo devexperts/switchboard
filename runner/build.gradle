@@ -1,0 +1,59 @@
+/**
+ * Copyright (C) 2002 - 2021 Devexperts LLC
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/.
+ */
+
+dependencies {
+    implementation project(":api")
+    implementation project(":core")
+    implementation project(":utils")
+
+    implementation "commons-cli:commons-cli:$commonsCliVersion"
+    implementation "org.apache.xbean:xbean-classloader:$xbeanVersion"
+    implementation "org.apache.logging.log4j:log4j-slf4j-impl:$apacheLog4jVersion"
+    implementation "org.slf4j:slf4j-api:$slf4jVersion"
+    implementation "com.fasterxml.jackson.core:jackson-annotations:$jacksonVersion"
+
+    testImplementation "com.fasterxml.jackson.core:jackson-databind:$jacksonVersion"
+    testImplementation "org.codehaus.groovy:groovy:$groovyVersion"
+    testImplementation "junit:junit:$junitVersion"
+}
+
+jar {
+    manifest {
+        attributes(
+                'Main-Class': 'com.devexperts.switchboard.IntegrationsRunner'
+        )
+    }
+}
+
+jar.finalizedBy shadowJar
+
+
+publishing {
+    publications {
+        shadow(MavenPublication) { publication ->
+            project.shadow.component(publication)
+        }
+    }
+
+    repositories {
+        maven {
+            name "qaauto"
+            url "https://maven.in.devexperts.com/content/repositories/qa-auto${version.endsWith('-SNAPSHOT') ? '-snapshot' : ''}"
+        }
+    }
+}
+
+test.dependsOn(
+        ":integrations:javaparser:clean",
+        ":integrations:javaparser:shadowJar",
+        ":integrations:cukes:clean",
+        ":integrations:cukes:shadowJar",
+        ":integrations:jira:clean",
+        ":integrations:jira:shadowJar",
+        ":integrations:teamcity:clean",
+        ":integrations:teamcity:shadowJar"
+)

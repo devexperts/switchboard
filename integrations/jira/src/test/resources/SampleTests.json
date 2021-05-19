@@ -1,0 +1,115 @@
+[
+  {
+    "@class": "com.devexperts.switchboard.entities.Test",
+    "identifier": "com.devexperts.switchboard.integrations.test.example.JUnitJiraTests#test1",
+    "attributes": {
+      "attributes": {
+        "comments": {
+          "": [
+            " STEP: do something 1",
+            " STEP: do something else 1",
+            " STEP: and another thing 1"
+          ]
+        },
+        "TestCase": {
+          "summary": [
+            "This is some test summary"
+          ],
+          "components": [
+            "Component1"
+          ],
+          "labels": [
+            "One",
+            "Two",
+            "Three"
+          ]
+        },
+        "Test": {},
+        "location": {
+          "package": [
+            "com.devexperts.switchboard.integrations.test.example"
+          ],
+          "method": [
+            "test1"
+          ],
+          "class": [
+            "JUnitJiraTests"
+          ]
+        }
+      }
+    }
+  },
+  {
+    "@class": "com.devexperts.switchboard.entities.Test",
+    "identifier": "com.devexperts.switchboard.integrations.test.example.JUnitJiraTests#test2",
+    "attributes": {
+      "attributes": {
+        "comments": {
+          "": [
+            " STEP: do something else 2",
+            " STEP: do something 2",
+            " STEP: and another thing 2"
+          ]
+        },
+        "TestCase": {
+          "summary": [
+            "This is another test summary"
+          ],
+          "components": [
+            "Component2"
+          ],
+          "severity": [
+            "Showstopper"
+          ],
+          "labels": [
+            "Four"
+          ]
+        },
+        "Test": {},
+        "location": {
+          "package": [
+            "com.devexperts.switchboard.integrations.test.example"
+          ],
+          "method": [
+            "test2"
+          ],
+          "class": [
+            "JUnitJiraTests"
+          ]
+        }
+      }
+    }
+  },
+  {
+    "@class": "com.devexperts.switchboard.entities.Test",
+    "identifier": "com.devexperts.switchboard.integrations.test.example.JUnitJiraTests#test3",
+    "attributes": {
+      "attributes": {
+        "TestCase": {
+          "summary": [
+            "Guess what? Another test summary!"
+          ],
+          "severity": [
+            "Minor functional"
+          ],
+          "labels": [
+            "Five",
+            "Six"
+          ]
+        },
+        "Test": {},
+        "location": {
+          "package": [
+            "com.devexperts.switchboard.integrations.test.example"
+          ],
+          "method": [
+            "test3"
+          ],
+          "class": [
+            "JUnitJiraTests"
+          ]
+        }
+      }
+    }
+  }
+]

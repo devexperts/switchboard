@@ -1,0 +1,31 @@
+{
+  "@class": "com.devexperts.switchboard.integrations.cukes.CukesIntegration",
+  "identifier": "CukesIntegration-1",
+  "runnable": false,
+  "testExtractors": [
+    {
+      "@class": "com.devexperts.switchboard.integrations.cukes.CukesTestExtractor",
+      "identifier": "CukesTestExtractor-1",
+      "testLocations": [
+        "src/test/resources/test_classes"
+      ],
+      "filePattern": "regex:.*.feature",
+      "cucumberNativeFilters": "",
+      "basePath": "src/test/resources"
+    }
+  ],
+  "testProcessors": [],
+  "testFilters": [
+    {
+      "@class": "com.devexperts.switchboard.impl.filters.AttributesFilter",
+      "identifier": "AttributesFilter-1",
+      "attributePredicate": {
+        "@class": "com.devexperts.switchboard.entities.attributes.AttributeIsPresent",
+        "attributeKeyRegex": "MarkerAnnotation1"
+      }
+    }
+  ],
+  "testSplitters": [],
+  "testRunProcessors": [],
+  "testRunConsumers": []
+}

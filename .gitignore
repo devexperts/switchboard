@@ -1,0 +1,12 @@
+.idea
+.gradle
+*.log
+*.log.*
+build
+classes
+deliver
+deploy
+*.iml
+out
+gen
+

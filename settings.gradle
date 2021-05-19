@@ -1,0 +1,9 @@
+include 'api'
+include 'core'
+include 'runner'
+include 'integrations:javaparser'
+include 'integrations:cukes'
+include 'integrations:jira'
+include 'integrations:teamcity'
+include 'utils'
+

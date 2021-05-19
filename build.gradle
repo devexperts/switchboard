@@ -1,0 +1,62 @@
+/**
+ * Copyright (C) 2002 - 2021 Devexperts LLC
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/.
+ */
+
+plugins {
+    id 'java'
+    id 'groovy'
+    id "com.github.johnrengelman.shadow" version "5.2.0"
+    id "org.hibernate.build.maven-repo-auth" version "3.0.2"
+    id 'com.github.jk1.dependency-license-report' version '1.16'
+}
+
+repositories {
+    mavenCentral()
+}
+
+allprojects {
+    group 'com.devexperts.switchboard'
+    version '1.0-SNAPSHOT'
+
+    sourceCompatibility = 1.8
+
+    apply plugin: 'java'
+    apply plugin: 'groovy'
+    apply plugin: 'com.github.johnrengelman.shadow'
+    apply plugin: 'maven-publish'
+    apply plugin: 'org.hibernate.build.maven-repo-auth'
+    apply plugin: 'com.github.jk1.dependency-license-report'
+
+    repositories {
+        mavenCentral()
+    }
+
+    dependencies {
+        implementation "org.apache.logging.log4j:log4j-slf4j-impl:$apacheLog4jVersion"
+        implementation "org.slf4j:slf4j-api:$slf4jVersion"
+        implementation "com.lmax:disruptor:$lmaxDisruptorVersion"
+
+        testImplementation "org.codehaus.groovy:groovy:$groovyVersion"
+        testImplementation "junit:junit:$junitVersion"
+    }
+}
+
+licenseReport {
+    projects = [project] + project.subprojects
+    configurations = ['compile']
+    excludeOwnGroup = true
+    renderers = [
+            new com.github.jk1.license.render.CsvReportRenderer('CsvReportRenderer.csv'),
+            new com.github.jk1.license.render.InventoryHtmlReportRenderer('InventoryHtmlReportRenderer.html', 'Dependency licenses'),
+            new com.github.jk1.license.render.InventoryMarkdownReportRenderer('InventoryMarkdownReportRenderer.md', 'Dependency licenses'),
+            new com.github.jk1.license.render.InventoryReportRenderer('InventoryReportRenderer.txt', 'Dependency licenses'),
+            new com.github.jk1.license.render.JsonReportRenderer('JsonReportRenderer_olpm.json'),
+            new com.github.jk1.license.render.JsonReportRenderer('JsonReportRenderer.json', false),
+            new com.github.jk1.license.render.SimpleHtmlReportRenderer('SimpleHtmlReportRenderer.html'),
+            new com.github.jk1.license.render.TextReportRenderer('TextReportRenderer.txt'),
+            new com.github.jk1.license.render.XmlReportRenderer('third-party-libs.xml', 'Back-End Libraries')
+    ]
+}

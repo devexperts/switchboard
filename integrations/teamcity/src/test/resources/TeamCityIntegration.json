@@ -1,0 +1,78 @@
+{
+  "@class": "com.devexperts.switchboard.integrations.teamcity.TeamCityIntegration",
+  "identifier": "TeamcityIntegration-1",
+  "runnable": false,
+  "testExtractors": [],
+  "testProcessors": [],
+  "testFilters": [],
+  "testSplitters": [],
+  "testRunProcessors": [],
+  "testRunConsumers": [
+    {
+      "@class": "com.devexperts.switchboard.integrations.teamcity.TcBuildTestRunConsumer",
+      "identifier": "TcBuildTestRunConsumer-1",
+      "buildTypeId": {
+        "@class": "com.devexperts.switchboard.entities.valuesupplier.ConstantValuesExtractor",
+        "values": [
+          "DXAutoQA_SwitchboardTest"
+        ]
+      },
+      "branchName": {
+        "@class": "com.devexperts.switchboard.entities.valuesupplier.IdentifierValuesExtractor"
+      },
+      "defaultBranch": true,
+      "agentStackingCriterion": {
+        "@class": "com.devexperts.switchboard.entities.valuesupplier.AttributeValuesExtractor",
+        "attributeKey": "key2",
+        "attributeValueKey": ""
+      },
+      "agentRequirements": [],
+      "buildProperties": {
+        "buildProp1": {
+          "@class": "com.devexperts.switchboard.entities.valuesupplier.ConstantValuesExtractor",
+          "values": [
+            "buildPropVal1"
+          ]
+        },
+        "buildProp2": {
+          "@class": "com.devexperts.switchboard.entities.valuesupplier.AttributeValuesExtractor",
+          "attributeKey": "key1",
+          "attributeValueKey": ""
+        },
+        "testString": {
+          "@class": "com.devexperts.switchboard.entities.valuesupplier.TestsToStringValuesExtractor",
+          "valuesSeparator": ", "
+        },
+        "verbosy": {
+          "@class": "com.devexperts.switchboard.entities.valuesupplier.FormattingValuesExtractor",
+          "formatString": "The quick brown %s jumps over the lazy %s.",
+          "formatValues": [
+            {
+              "@class": "com.devexperts.switchboard.entities.valuesupplier.IdentifierValuesExtractor"
+            },
+            {
+              "@class": "com.devexperts.switchboard.entities.valuesupplier.ConstantValuesExtractor",
+              "values": [
+                "DXAutoQA_SwitchboardTest"
+              ]
+            }
+          ]
+        }
+      },
+      "buildTags": [
+        {
+          "@class": "com.devexperts.switchboard.entities.valuesupplier.AttributeKeyValuesExtractor",
+          "attributeKeyRegex": "tag-1"
+        },
+        {
+          "@class": "com.devexperts.switchboard.entities.valuesupplier.AttributeKeyValuesExtractor",
+          "attributeKeyRegex": "tag-2"
+        }
+      ],
+      "moveToTop": true
+    }
+  ],
+  "basePath": "https://teamcity.somewhere.com",
+  "login": "user",
+  "password": "p@ssw0rd"
+}

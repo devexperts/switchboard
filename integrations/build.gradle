@@ -1,0 +1,48 @@
+/**
+ * Copyright (C) 2002 - 2021 Devexperts LLC
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/.
+ */
+
+subprojects {
+    group 'com.devexperts.switchboard.integrations'
+
+    dependencies {
+        compileOnly project(":api")
+        compileOnly project(":core")
+
+        compileOnly "com.fasterxml.jackson.core:jackson-annotations:$jacksonVersion"
+
+        compileOnly "org.apache.logging.log4j:log4j-slf4j-impl:$apacheLog4jVersion"
+        compileOnly "org.slf4j:slf4j-api:$slf4jVersion"
+
+        testImplementation project(":api")
+        testImplementation project(":core")
+        testImplementation project(":utils")
+
+        testImplementation "com.fasterxml.jackson.core:jackson-databind:$jacksonVersion"
+        testImplementation "com.fasterxml.jackson.core:jackson-annotations:$jacksonVersion"
+
+        testImplementation "org.apache.logging.log4j:log4j-slf4j-impl:$apacheLog4jVersion"
+        testImplementation "org.slf4j:slf4j-api:$slf4jVersion"
+
+        testImplementation "org.codehaus.groovy:groovy:$groovyVersion"
+        testImplementation "org.mockito:mockito-core:$mockitoVersion"
+        testImplementation "junit:junit:$junitVersion"
+    }
+
+    publishing {
+        publications {
+            shadow(MavenPublication) { publication ->
+                project.shadow.component(publication)
+            }
+        }
+        repositories {
+            maven {
+                name "qaauto"
+                url "https://maven.in.devexperts.com/content/repositories/qa-auto${version.endsWith('-SNAPSHOT') ? '-snapshot' : ''}"
+            }
+        }
+    }
+}

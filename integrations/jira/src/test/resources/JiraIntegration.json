@@ -1,0 +1,28 @@
+{
+  "@class": "com.devexperts.switchboard.integrations.jira.JiraIntegration",
+  "identifier": "Jira_integration_1",
+  "runnable": false,
+  "testExtractors": [],
+  "testProcessors": [],
+  "testFilters": [
+    {
+      "@class": "com.devexperts.switchboard.integrations.jira.JqlQueryTestFilter",
+      "identifier": "TestJqlQueryTestFilter_1",
+      "jqlQuery": "query1",
+      "attributeKey": "jiraId",
+      "attributeValueKey": ""
+    },
+    {
+      "@class": "com.devexperts.switchboard.integrations.jira.JqlQueryTestFilter",
+      "identifier": "TestJqlQueryTestFilter_2",
+      "jqlQuery": "query2",
+      "attributeKey": "jiraId",
+      "attributeValueKey": ""
+    }
+  ],
+  "testSplitters": [],
+  "testRunConsumers": [],
+  "uri": "https://jira.somwhere.elsewhere.com/",
+  "login": "user",
+  "password": "password"
+}

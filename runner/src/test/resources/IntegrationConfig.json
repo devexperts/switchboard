@@ -1,0 +1,117 @@
+[
+  {
+    "@class": "com.devexperts.switchboard.impl.FeaturelessIntegration",
+    "identifier": "FeaturelessIntegration-1",
+    "runnable": true,
+    "testExtractors": [
+      {
+        "@class": "com.devexperts.switchboard.api.ComponentReference",
+        "identifier": "CukesTestExtractor-1",
+        "integrationIdentifier": "CukesIntegration-1"
+      },
+      {
+        "@class": "com.devexperts.switchboard.api.ComponentReference",
+        "identifier": "JunitExtractor-1",
+        "integrationIdentifier": "JavaParserIntegration-1"
+      }
+    ],
+    "testProcessors": [],
+    "testFilters": [
+      {
+        "@class": "com.devexperts.switchboard.impl.filters.AttributesFilter",
+        "identifier": "AttributesFilter-1",
+        "attributePredicate": {
+          "@class": "com.devexperts.switchboard.entities.attributes.AttributeIsPresent",
+          "attributeKeyRegex": ".*(ty|Marker).*"
+        }
+      }
+    ],
+    "testSplitters": [
+      {
+        "@class": "com.devexperts.switchboard.impl.splitters.AttributeKeySplitter",
+        "identifier": "AttributeKeySplitter-1",
+        "attributeKeys": [
+          "Regression",
+          "Sanity",
+          "Bat"
+        ]
+      },
+      {
+        "@class": "com.devexperts.switchboard.impl.splitters.AttributeSingleValueSplitter",
+        "identifier": "AttributeSingleValueSplitter-1",
+        "attributeKey": "com.devexperts.switchboard.integrations.javaparser.Annotations.ValueAnnotation1",
+        "attributeValueKey": ""
+      }
+    ],
+    "testRunProcessors": [],
+    "testRunConsumers": [
+      {
+        "@class": "com.devexperts.switchboard.utils.SystemPropsTestConsumer",
+        "identifier": "SystemPropsTestConsumer-1"
+      }
+    ]
+  },
+  {
+    "@class": "com.devexperts.switchboard.integrations.cukes.CukesIntegration",
+    "identifier": "CukesIntegration-1",
+    "runnable": false,
+    "testExtractors": [
+      {
+        "@class": "com.devexperts.switchboard.integrations.cukes.CukesTestExtractor",
+        "identifier": "CukesTestExtractor-1",
+        "testLocations": [
+          "../integrations/cukes/src/test/resources/test_classes"
+        ],
+        "filePattern": "regex:.*.feature",
+        "cucumberNativeFilters": "",
+        "basePath": "../integrations/cukes/src/test/resources"
+      }
+    ],
+    "testProcessors": [],
+    "testFilters": [
+      {
+        "@class": "com.devexperts.switchboard.impl.filters.AttributesFilter",
+        "identifier": "AttributesFilter-2",
+        "attributePredicate": {
+          "@class": "com.devexperts.switchboard.entities.attributes.AttributeIsPresent",
+          "attributeKeyRegex": "MarkerAnnotation1"
+        }
+      }
+    ],
+    "testSplitters": [],
+    "testRunProcessors": [],
+    "testRunConsumers": []
+  },
+  {
+    "@class": "com.devexperts.switchboard.integrations.javaparser.JavaParserIntegration",
+    "identifier": "JavaParserIntegration-1",
+    "runnable": false,
+    "testExtractors": [
+      {
+        "@class": "com.devexperts.switchboard.integrations.javaparser.JavaTestExtractor",
+        "identifier": "JunitExtractor-1",
+        "testLocations": [
+          "../integrations/javaparser/src/test/resources/test_classes/typed/junit/JUnitTests.java",
+          "../integrations/javaparser/src/test/resources/test_classes/typed/junit/pckg"
+        ],
+        "filePattern": "regex:.*.java",
+        "testAnnotationPattern": "org.junit.Test",
+        "storeAnnotationsQualified": true
+      }
+    ],
+    "testProcessors": [],
+    "testFilters": [
+      {
+        "@class": "com.devexperts.switchboard.impl.filters.AttributesFilter",
+        "identifier": "AttributesFilter-3",
+        "attributePredicate": {
+          "@class": "com.devexperts.switchboard.entities.attributes.AttributeIsPresent",
+          "attributeKeyRegex": "MarkerAnnotation1"
+        }
+      }
+    ],
+    "testSplitters": [],
+    "testRunProcessors": [],
+    "testRunConsumers": []
+  }
+]

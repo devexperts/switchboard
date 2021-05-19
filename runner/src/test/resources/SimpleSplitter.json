@@ -1,0 +1,5 @@
+{
+  "@class": "com.devexperts.switchboard.impl.splitters.TestCountSplitter",
+  "identifier": "TestCountSplitter-1",
+  "count": 5
+}

@@ -1,0 +1,17 @@
+[
+  {
+    "@class": "com.devexperts.switchboard.impl.splitters.TestCountSplitter",
+    "identifier": "TestCountSplitter-1",
+    "count": 2
+  },
+  {
+    "@class": "com.devexperts.switchboard.impl.splitters.TestCountSplitter",
+    "identifier": "TestCountSplitter-2",
+    "count": 4
+  },
+  {
+    "@class": "com.devexperts.switchboard.impl.splitters.TestCountSplitter",
+    "identifier": "TestCountSplitter-3",
+    "count": 6
+  }
+]

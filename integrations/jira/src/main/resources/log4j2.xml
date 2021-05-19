@@ -1,0 +1,24 @@
+<Configuration>
+    <Appenders>
+        <File name="fileLogAppender" fileName="log/jira.log" append="false" immediateFlush="true">
+            <PatternLayout pattern="[%-5level] %d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %c{1} - %msg%n"/>
+        </File>
+        <File name="fileDebugAppender" fileName="log/jira.debug.log" append="false" immediateFlush="true">
+            <PatternLayout pattern="[%-5level] %d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %c{1} - %msg%n"/>
+        </File>
+        <File name="fileTraceAppender" fileName="log/jira.trace.log" append="false" immediateFlush="true">
+            <PatternLayout pattern="[%-5level] %d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %c{1} - %msg%n"/>
+        </File>
+        <Console name="consoleAppender" target="SYSTEM_OUT">
+            <PatternLayout pattern="[%-5level] %d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %c{1} - %msg%n"/>
+        </Console>
+    </Appenders>
+    <Loggers>
+        <AsyncRoot level="trace">
+            <AppenderRef ref="fileTraceAppender" level="TRACE"/>
+            <AppenderRef ref="fileDebugAppender" level="DEBUG"/>
+            <AppenderRef ref="fileLogAppender" level="INFO"/>
+            <AppenderRef ref="consoleAppender" level="INFO"/>
+        </AsyncRoot>
+    </Loggers>
+</Configuration>

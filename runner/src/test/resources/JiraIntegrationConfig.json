@@ -1,0 +1,26 @@
+[
+  {
+    "@class": "com.devexperts.switchboard.integrations.jira.JiraIntegration",
+    "identifier": "Plain config",
+    "runnable": false,
+    "uri": "https://jira.somewhere.com",
+    "login": "explicitLogin",
+    "password": "explicitPassword"
+  },
+  {
+    "@class": "com.devexperts.switchboard.integrations.jira.JiraIntegration",
+    "identifier": "Placeholders",
+    "runnable": false,
+    "uri": "%some.jira_url-2%",
+    "login": "%login-2%",
+    "password": "%password-2%"
+  },
+  {
+    "@class": "com.devexperts.switchboard.integrations.jira.JiraIntegration",
+    "identifier": "Escaped placeholders",
+    "runnable": false,
+    "uri": "%%some.jira_url-2%%",
+    "login": "%%login-3%%",
+    "password": "%password-3%"
+  }
+]
