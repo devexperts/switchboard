@@ -1,0 +1,31 @@
+{
+  "@class": "com.devexperts.switchboard.integrations.bytecodeparser.BytecodeParserIntegration",
+  "identifier": "BytecodeParserIntegration-1",
+  "runnable": false,
+  "testExtractors": [
+    {
+      "@class": "com.devexperts.switchboard.integrations.bytecodeparser.BytecodeTestExtractor",
+      "identifier": "JunitExtractor-2",
+      "testLocations": [
+        "src/test/resources/test_classes/junit/JUnitTests.java",
+        "src/test/resources/test_classes/junit/pckg"
+      ],
+      "filePattern": "regex:.*.jar",
+      "testAnnotationPattern": "org.junit.Test"
+    }
+  ],
+  "testProcessors": [],
+  "testFilters": [
+    {
+      "@class": "com.devexperts.switchboard.impl.filters.AttributesFilter",
+      "identifier": "AttributesFilter-1",
+      "attributePredicate": {
+        "@class": "com.devexperts.switchboard.entities.attributes.AttributeIsPresent",
+        "attributeKeyRegex": "MarkerAnnotation1"
+      }
+    }
+  ],
+  "testSplitters": [],
+  "testRunProcessors": [],
+  "testRunConsumers": []
+}

@@ -106,7 +106,7 @@ Here's how you can set Jira password from `JIRA_PASSWORD` environment variable:
 ```
 [
   {
-    "@class": "com.devexperts.dxci.integrations.javaparser.JavaParserIntegration",
+    "@class": "com.devexperts.switchboard.integrations.javaparser.JavaParserIntegration",
     "identifier": "JavaParserIntegration - runnable",
     "runnable": true,
     ...
