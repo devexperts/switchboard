@@ -20,9 +20,11 @@ import org.junit.Test
 @SuppressWarnings("GroovyAccessibility")
 class JsonLoadTest {
     private static final URL javaparserUrl = TestUtils.findLibUrl("../integrations/javaparser/build/libs/")
+    private static final URL bytecodeParserUrl = TestUtils.findLibUrl("../integrations/bytecodeparser/build/libs/")
     private static final URL cukesUrl = TestUtils.findLibUrl("../integrations/cukes/build/libs/")
     private static final ClassLoader threadClassLoader = Thread.currentThread().getContextClassLoader()
     private static final ClassLoader javaparserClassLoader = ClassLoaderUtils.getClassloader("javaparserClassLoader", false, javaparserUrl)
+    private static final ClassLoader bytecodeParserClassLoader = ClassLoaderUtils.getClassloader("bytecodeParserClassLoader", false, bytecodeParserUrl)
     private static final ClassLoader cukesClassLoader = ClassLoaderUtils.getClassloader("cukesClassLoader", false, cukesUrl)
 
     @Test
@@ -69,6 +71,20 @@ class JsonLoadTest {
         assert integration.getIdentifier() == "JavaParserIntegration-1"
         assert TestUtils.getIntegrationComponents(integration, "testExtractors").size() == 1
         assert TestUtils.getIntegrationComponents(integration, "testExtractors").find { it.identifier == "JunitExtractor-1" } != null
+        assert TestUtils.getIntegrationComponents(integration, "testProcessors").isEmpty()
+        assert TestUtils.getIntegrationComponents(integration, "testFilters").size() == 1
+        assert TestUtils.getIntegrationComponents(integration, "testFilters").find { it.identifier == "AttributesFilter-1" } != null
+        assert TestUtils.getIntegrationComponents(integration, "testSplitters").isEmpty()
+        assert TestUtils.getIntegrationComponents(integration, "testRunConsumers").isEmpty()
+    }
+
+    @Test
+    void bytecodeParserIntegrationLoadTest() {
+        URL res = threadClassLoader.getResource("BytecodeParserIntegration.json")
+        def integration = JacksonUtils.getMapper(bytecodeParserClassLoader).readValue(res, Integration.class)
+        assert integration.getIdentifier() == "BytecodeParserIntegration-1"
+        assert TestUtils.getIntegrationComponents(integration, "testExtractors").size() == 1
+        assert TestUtils.getIntegrationComponents(integration, "testExtractors").find { it.identifier == "JunitExtractor-2" } != null
         assert TestUtils.getIntegrationComponents(integration, "testProcessors").isEmpty()
         assert TestUtils.getIntegrationComponents(integration, "testFilters").size() == 1
         assert TestUtils.getIntegrationComponents(integration, "testFilters").find { it.identifier == "AttributesFilter-1" } != null

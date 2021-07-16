@@ -50,6 +50,8 @@ publishing {
 test.dependsOn(
         ":integrations:javaparser:clean",
         ":integrations:javaparser:shadowJar",
+        ":integrations:bytecodeparser:clean",
+        ":integrations:bytecodeparser:shadowJar",
         ":integrations:cukes:clean",
         ":integrations:cukes:shadowJar",
         ":integrations:jira:clean",

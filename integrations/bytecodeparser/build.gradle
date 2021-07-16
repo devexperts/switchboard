@@ -1,0 +1,14 @@
+dependencies {
+    implementation "com.google.guava:guava:$guava"
+    implementation "com.machinezoo.noexception:noexception:$noexception"
+    testImplementation "org.testng:testng:$testNG"
+    testImplementation "org.junit.jupiter:junit-jupiter:$junitJupiter"
+}
+
+publishing {
+    publications {
+        maven(MavenPublication) {
+            from components.java
+        }
+    }
+}
