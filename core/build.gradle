@@ -10,5 +10,7 @@ dependencies {
     compileOnly "com.fasterxml.jackson.core:jackson-annotations:$jacksonVersion"
 
     testImplementation project(":api")
+    testImplementation project(":utils")
     testImplementation "com.fasterxml.jackson.core:jackson-annotations:$jacksonVersion"
+    testImplementation "com.fasterxml.jackson.core:jackson-databind:$jacksonVersion"
 }

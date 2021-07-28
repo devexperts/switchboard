@@ -1,0 +1,74 @@
+{
+  "@class": "com.devexperts.switchboard.entities.Test",
+  "identifier": "com.devexperts.test.path.TestDescriptionFormatterTests#testTestDescriptionFormatter",
+  "attributes": {
+    "attributes": {
+      "BrowserTest": {},
+      "Tag": {
+        "": [
+          "tag1",
+          "tag2"
+        ]
+      },
+      "Component": {
+        "": [
+          "Component1"
+        ]
+      },
+      "RepositoryPath": {
+        "": [
+          "/root/path/other_path"
+        ]
+      },
+      "ParameterizedTest": {},
+      "EnumSource": {
+        "": [
+          "Src"
+        ]
+      },
+      "DisplayName": {
+        "": [
+          "A test of TestDescriptionFormatter"
+        ]
+      },
+      "TestDetails": {
+        "severity": [
+          "Severity.FUNCTIONAL"
+        ],
+        "manualEstimate": [
+          "20"
+        ],
+        "priority": [
+          "Priority.NORMAL"
+        ],
+        "uniqueId": [
+          "123456"
+        ]
+      },
+      "location": {
+        "package": [
+          "com.devexperts.test.path"
+        ],
+        "class": [
+          "TestDescriptionFormatterTests"
+        ],
+        "method": [
+          "testTestDescriptionFormatter"
+        ]
+      },
+      "comments": {
+        "comments": [
+          " Action: This is action 1\n Action: And this is action 2\n Action: Yet another action 3\n Result: Result of action 3 contains:\n First row;\n Second row\n Action: And then we execute action 4\n Action: And action 5\n And action5 another row\n Result: And this is the result of action 5\n second row for action 5\n Action: Action 6 is required too\n Action: And Action 7 of course\n sub action 7.1\n sub action 7.2\n Do we really need action 8?\n Action: Well action 8 is fine too\n Result: \n result1;\n result2.\n"
+        ],
+        "javadoc": [
+          "This is an overview for our test case. We need an overview, right?"
+        ]
+      },
+      "preconditions_comments": {
+        "javadoc": [
+          "# This test case has a precondition\n# Two preconditions\n# Even three preconditions!"
+        ]
+      }
+    }
+  }
+}

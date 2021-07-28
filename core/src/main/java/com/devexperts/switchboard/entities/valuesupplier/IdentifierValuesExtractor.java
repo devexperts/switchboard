@@ -16,7 +16,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 /**
- * This implementation of {@link ValuesExtractor} can be initiated by both {@link TestRun} and {@link TestRun}
+ * This implementation of {@link ValuesExtractor} can be initiated by both {@link Test} and {@link TestRun}
  * returning #getIdentifier() value of initiating entity
  */
 public class IdentifierValuesExtractor implements TestRunValuesExtractor, TestValuesExtractor {
