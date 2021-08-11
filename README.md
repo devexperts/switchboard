@@ -50,7 +50,7 @@ This configuration will:
 - create test batches grouped by 5 tests at most
 - log the result into the console
 
-```
+```yaml
 {
   "@class": "com.devexperts.switchboard.integrations.cukes.CukesIntegration",
   "identifier": "CukesIntegration-1",
@@ -103,7 +103,7 @@ executed during another Integration run. Component wrapped by ComponentReference
 ### Environment variables in the configuration
 If a value in configuration should be resolved from the environment during execution the variable should be set as `%variable_name%`.
 Here's how you can set Jira password from `JIRA_PASSWORD` environment variable:
-```
+```yaml
 [
   {
     "@class": "com.devexperts.switchboard.integrations.javaparser.JavaParserIntegration",
