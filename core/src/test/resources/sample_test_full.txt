@@ -1,0 +1,34 @@
+*Overview:*
+This is an overview for our test case. We need an overview, right?
+
+*Preconditions:*
+# This test case has a precondition
+# Two preconditions
+# Even three preconditions!
+
+*Actions:*
+# This is action 1
+# And this is action 2
+# Yet another action 3
+# Check result (1)
+# And then we execute action 4
+# And action 5
+ And action5 another row
+# Check result (2)
+# Action 6 is required too
+# And Action 7 of course
+ sub action 7.1
+ sub action 7.2
+ Do we really need action 8?
+# Well action 8 is fine too
+# Check result (3)
+
+*Results:*
+# After step (3) - Result of action 3 contains:
+ First row;
+ Second row
+# After step (6) - And this is the result of action 5
+ second row for action 5
+# After step (10) -  
+ result1;
+ result2.

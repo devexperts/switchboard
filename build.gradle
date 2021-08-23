@@ -49,14 +49,6 @@ licenseReport {
     configurations = ['compile']
     excludeOwnGroup = true
     renderers = [
-            new com.github.jk1.license.render.CsvReportRenderer('CsvReportRenderer.csv'),
             new com.github.jk1.license.render.InventoryHtmlReportRenderer('InventoryHtmlReportRenderer.html', 'Dependency licenses'),
-            new com.github.jk1.license.render.InventoryMarkdownReportRenderer('InventoryMarkdownReportRenderer.md', 'Dependency licenses'),
-            new com.github.jk1.license.render.InventoryReportRenderer('InventoryReportRenderer.txt', 'Dependency licenses'),
-            new com.github.jk1.license.render.JsonReportRenderer('JsonReportRenderer_olpm.json'),
-            new com.github.jk1.license.render.JsonReportRenderer('JsonReportRenderer.json', false),
-            new com.github.jk1.license.render.SimpleHtmlReportRenderer('SimpleHtmlReportRenderer.html'),
-            new com.github.jk1.license.render.TextReportRenderer('TextReportRenderer.txt'),
-            new com.github.jk1.license.render.XmlReportRenderer('third-party-libs.xml', 'Back-End Libraries')
     ]
 }

@@ -18,7 +18,7 @@ import java.util.Objects;
 import java.util.Set;
 
 /**
- * This implementation of {@link ValuesExtractor} can be initiated by both {@link TestRun} and {@link TestRun}
+ * This implementation of {@link ValuesExtractor} can be initiated by both {@link Test} and {@link TestRun}
  * for extracting from {@link Attributes} a single TestAttribute value
  * under specified {@link attributeKey} and {@link attributeValueKey}
  */
