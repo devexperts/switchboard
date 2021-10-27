@@ -8,6 +8,8 @@
 subprojects {
     group 'com.devexperts.switchboard.integrations'
 
+    apply plugin: 'com.github.johnrengelman.shadow'
+
     dependencies {
         compileOnly project(":api")
         compileOnly project(":core")

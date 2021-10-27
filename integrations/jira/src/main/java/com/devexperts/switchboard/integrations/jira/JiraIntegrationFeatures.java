@@ -20,6 +20,7 @@ import com.atlassian.jira.rest.client.api.domain.CimProject;
 import com.atlassian.jira.rest.client.api.domain.Issue;
 import com.atlassian.jira.rest.client.api.domain.IssueType;
 import com.atlassian.jira.rest.client.api.domain.Project;
+import com.atlassian.jira.rest.client.api.domain.User;
 import com.atlassian.jira.rest.client.auth.BasicHttpAuthenticationHandler;
 import com.atlassian.jira.rest.client.internal.async.AsynchronousJiraRestClient;
 import com.atlassian.jira.rest.client.internal.async.AtlassianHttpClientDecorator;
@@ -49,6 +50,8 @@ public class JiraIntegrationFeatures implements IntegrationFeatures {
     private final Map<String, Project> projectCache = new HashMap<>();
     private final Map<String, CimProject> cimProjectCache = new HashMap<>();
     private final Map<String, Map<String, CimIssueType>> projectIssueTypeCache = new HashMap<>();
+    private final Map<String, User> usersCache = new HashMap<>();
+
     private final int socketTimeoutSeconds;
     private final int searchQueryBatch;
 
@@ -69,22 +72,22 @@ public class JiraIntegrationFeatures implements IntegrationFeatures {
      */
     public CimIssueType getIssueType(String projectKey, String issueTypeName) {
         return projectIssueTypeCache.computeIfAbsent(projectKey, k -> new HashMap<>())
-                .computeIfAbsent(issueTypeName,
-                        i -> StreamSupport.stream(getCimProject(projectKey).getIssueTypes().spliterator(), false)
-                                .filter(t -> Objects.equals(i, t.getName()))
-                                .findFirst()
-                                .orElseThrow(() -> new IllegalStateException(
-                                        String.format("IssueType '%s' not found in project '%s'", issueTypeName, projectKey))));
+            .computeIfAbsent(issueTypeName,
+                i -> StreamSupport.stream(getCimProject(projectKey).getIssueTypes().spliterator(), false)
+                    .filter(t -> Objects.equals(i, t.getName()))
+                    .findFirst()
+                    .orElseThrow(() -> new IllegalStateException(
+                        String.format("IssueType '%s' not found in project '%s'", issueTypeName, projectKey))));
     }
 
     private CimProject getCimProject(String projectKey) {
         return cimProjectCache.computeIfAbsent(projectKey,
-                k -> StreamSupport.stream(jiraClient.getIssueClient().getCreateIssueMetadata(new GetCreateIssueMetadataOptionsBuilder()
-                        .withExpandedIssueTypesFields()
-                        .withProjectKeys(k)
-                        .build()).claim().spliterator(), false)
-                        .findFirst()
-                        .orElseThrow(() -> new IllegalStateException(String.format("Project '%s' not found", projectKey))));
+            k -> StreamSupport.stream(jiraClient.getIssueClient().getCreateIssueMetadata(new GetCreateIssueMetadataOptionsBuilder()
+                    .withExpandedIssueTypesFields()
+                    .withProjectKeys(k)
+                    .build()).claim().spliterator(), false)
+                .findFirst()
+                .orElseThrow(() -> new IllegalStateException(String.format("Project '%s' not found", projectKey))));
     }
 
     /**
@@ -96,12 +99,13 @@ public class JiraIntegrationFeatures implements IntegrationFeatures {
      */
     public BasicComponent getComponent(String projectKey, String componentName) {
         return StreamSupport.stream(projectCache.computeIfAbsent(projectKey,
-                p -> jiraClient.getProjectClient().getProject(p).claim())
+                    p -> jiraClient.getProjectClient().getProject(p).claim())
                 .getComponents()
                 .spliterator(), false)
-                .filter(i -> Objects.equals(i.getName(), componentName))
-                .findFirst()
-                .orElseThrow(() -> new IllegalStateException(String.format("Component '%s' not found in project '%s'", componentName, projectKey)));
+            .filter(i -> Objects.equals(i.getName(), componentName))
+            .findFirst()
+            .orElseThrow(
+                () -> new IllegalStateException(String.format("Component '%s' not found in project '%s'", componentName, projectKey)));
     }
 
     /**
@@ -133,8 +137,24 @@ public class JiraIntegrationFeatures implements IntegrationFeatures {
      */
     public List<String> searchForIssueKeys(String jqlQuery) {
         return searchForIssues(jqlQuery, Collections.emptySet())
-                .stream().map(BasicIssue::getKey)
-                .collect(Collectors.toList());
+            .stream().map(BasicIssue::getKey)
+            .collect(Collectors.toList());
+    }
+
+    /**
+     * Retrieves information about selected user.
+     *
+     * @param name - username – JIRA username/login
+     * @return complete information about given user
+     */
+    public User findUser(String name) {
+        return usersCache.computeIfAbsent(name, n -> {
+            try {
+                return jiraClient.getUserClient().getUser(n).claim();
+            } catch (Exception e) {
+                throw new IllegalStateException("Failed to provide user for name '" + n + "'", e);
+            }
+        });
     }
 
     private List<Issue> searchForIssues(String jqlQuery, Set<String> fields) {
@@ -159,7 +179,7 @@ public class JiraIntegrationFeatures implements IntegrationFeatures {
                     .claim()
                     .getIssues()
                     .spliterator(), false)
-                    .collect(Collectors.toList());
+                .collect(Collectors.toList());
         } catch (Exception e) {
             throw new RuntimeException(String.format("Failed to execute query '%s'", jqlQuery), e);
         }

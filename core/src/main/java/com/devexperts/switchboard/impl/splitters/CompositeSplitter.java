@@ -23,7 +23,7 @@ import java.util.stream.Collectors;
 
 /**
  * Implementation of {@link TestSplitter} based on a number of TestSplitters each matched with AttributePredicate specified as {@link conditionalSplitters}.
- * Each test is checked against this predicates (in order of ones specified) until first successful of successful predicate test,
+ * Each test is checked against these predicates (in order of ones specified) until first successful of successful predicate test,
  * then a respective TestSplitter is applied. If none match the {@link defaultSplitter} is applied.
  */
 public class CompositeSplitter<F extends IntegrationFeatures> implements TestSplitter<F> {

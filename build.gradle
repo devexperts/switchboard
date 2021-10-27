@@ -1,3 +1,5 @@
+import com.github.jk1.license.render.InventoryHtmlReportRenderer
+
 /**
  * Copyright (C) 2002 - 2021 Devexperts LLC
  * This Source Code Form is subject to the terms of the Mozilla Public
@@ -8,7 +10,7 @@
 plugins {
     id 'java'
     id 'groovy'
-    id "com.github.johnrengelman.shadow" version "5.2.0"
+    id "com.github.johnrengelman.shadow" version "5.2.0" apply false
     id "org.hibernate.build.maven-repo-auth" version "3.0.2"
     id 'com.github.jk1.dependency-license-report' version '1.16'
 }
@@ -25,7 +27,6 @@ allprojects {
 
     apply plugin: 'java'
     apply plugin: 'groovy'
-    apply plugin: 'com.github.johnrengelman.shadow'
     apply plugin: 'maven-publish'
     apply plugin: 'org.hibernate.build.maven-repo-auth'
     apply plugin: 'com.github.jk1.dependency-license-report'
@@ -48,7 +49,5 @@ licenseReport {
     projects = [project] + project.subprojects
     configurations = ['compile']
     excludeOwnGroup = true
-    renderers = [
-            new com.github.jk1.license.render.InventoryHtmlReportRenderer('InventoryHtmlReportRenderer.html', 'Dependency licenses'),
-    ]
+    renderers = [new InventoryHtmlReportRenderer('InventoryHtmlReportRenderer.html', 'Dependency licenses')]
 }

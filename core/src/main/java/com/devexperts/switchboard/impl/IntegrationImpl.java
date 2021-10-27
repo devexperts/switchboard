@@ -205,7 +205,7 @@ public abstract class IntegrationImpl<
 
             @Override
             public List<TestRun> run(List<TestRun> testRuns) {
-                return testProcessors.isEmpty() ? testRuns : testRunProcessors.stream()
+                return testRunProcessors.isEmpty() ? testRuns : testRunProcessors.stream()
                         .map(e -> e.processRuns(testRuns))
                         .flatMap(Collection::stream)
                         .collect(Collectors.toList());
@@ -300,12 +300,13 @@ public abstract class IntegrationImpl<
                 Objects.equals(testProcessors, that.testProcessors) &&
                 Objects.equals(testFilters, that.testFilters) &&
                 Objects.equals(testSplitters, that.testSplitters) &&
+                Objects.equals(testRunProcessors, that.testRunProcessors) &&
                 Objects.equals(testRunConsumers, that.testRunConsumers);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(identifier, runnable, testExtractors, testProcessors, testFilters, testSplitters, testRunConsumers);
+        return Objects.hash(identifier, runnable, testExtractors, testProcessors, testFilters, testSplitters, testRunProcessors, testRunConsumers);
     }
 
     @Override
@@ -317,12 +318,13 @@ public abstract class IntegrationImpl<
                 ", testProcessors=" + testProcessors +
                 ", testFilters=" + testFilters +
                 ", testSplitters=" + testSplitters +
+                ", testRunProcessors=" + testRunProcessors +
                 ", testRunConsumers=" + testRunConsumers +
                 '}';
     }
 
     private void forEachComponent(Consumer<IntegrationComponent<F>> consumer) {
-        Stream.of(testExtractors, testProcessors, testFilters, testSplitters, testRunConsumers)
+        Stream.of(testExtractors, testProcessors, testFilters, testSplitters, testRunProcessors, testRunConsumers)
                 .flatMap(Collection::stream)
                 .forEach(consumer);
     }
@@ -366,6 +368,11 @@ public abstract class IntegrationImpl<
 
         public B testSplitters(List<TestSplitter<F>> val) {
             this.testSplitters = val;
+            return self();
+        }
+
+        public B testRunProcessors(List<TestRunProcessor<F>> val) {
+            this.testRunProcessors = val;
             return self();
         }
 

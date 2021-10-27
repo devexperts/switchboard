@@ -25,7 +25,7 @@ import java.net.URL;
 import java.util.Arrays;
 import java.util.List;
 
-public class IntegrationsRunner {
+public final class IntegrationsRunner {
     private static final Logger log = LoggerFactory.getLogger(IntegrationsRunner.class);
     private static final Option CONFIG_PATH = Option.builder("c")
             .longOpt("configPath").desc("JSON configuration file path").required(true).hasArg().build();
@@ -37,10 +37,10 @@ public class IntegrationsRunner {
     private IntegrationsRunner() {}
 
     public static void main(String[] args) {
-        new IntegrationsRunner().run(args);
+        run(args);
     }
 
-    private void run(String[] args) {
+    public static void run(String[] args) {
         setup(args);
         IntegrationContexts.getIntegrations().forEach(Integration::init);
         try {

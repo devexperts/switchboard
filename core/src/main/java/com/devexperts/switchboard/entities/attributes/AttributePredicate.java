@@ -17,4 +17,9 @@ import java.util.function.Predicate;
  */
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS)
 public interface AttributePredicate extends Predicate<Attributes> {
+
+    @Override
+    default AttributePredicate negate() {
+        return new NotAttributeWrapper(this);
+    }
 }

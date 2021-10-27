@@ -112,7 +112,7 @@ Here's how you can set Jira password from `JIRA_PASSWORD` environment variable:
     ...
     "uri": "https://jira.somewhere.elsewhere.com",
     "login": "somebody",
-    "password": ""%JIRA_PASSWORD%"
+    "password": "%JIRA_PASSWORD%"
   }
 ]
 ```
