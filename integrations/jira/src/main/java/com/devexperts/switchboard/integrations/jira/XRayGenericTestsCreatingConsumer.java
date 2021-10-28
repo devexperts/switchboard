@@ -15,6 +15,7 @@ import com.atlassian.jira.rest.client.api.domain.CustomFieldOption;
 import com.atlassian.jira.rest.client.api.domain.Issue;
 import com.atlassian.jira.rest.client.api.domain.IssueField;
 import com.atlassian.jira.rest.client.api.domain.TimeTracking;
+import com.atlassian.jira.rest.client.api.domain.User;
 import com.atlassian.jira.rest.client.api.domain.input.IssueInput;
 import com.atlassian.jira.rest.client.api.domain.input.IssueInputBuilder;
 import com.devexperts.switchboard.api.TestRunConsumer;
@@ -209,7 +210,7 @@ public class XRayGenericTestsCreatingConsumer implements TestRunConsumer<JiraInt
         return builder.build();
     }
 
-    private static IssueInputBuilder setField(Test test, IssueInputBuilder builder, String fieldName, TestValuesExtractor valuesExtractor,
+    private IssueInputBuilder setField(Test test, IssueInputBuilder builder, String fieldName, TestValuesExtractor valuesExtractor,
                                               Map<String, CimFieldInfo> fields)
     {
         String value = valuesExtractor.getTestValue(test);
@@ -256,7 +257,7 @@ public class XRayGenericTestsCreatingConsumer implements TestRunConsumer<JiraInt
                 field.getAllowedValues(), value));
     }
 
-    private static Object transformValue(String fieldName, String fieldType, Iterable<Object> allowedValuesIter, String value)
+    private Object transformValue(String fieldName, String fieldType, Iterable<Object> allowedValuesIter, String value)
     {
         List<Object> allowedValues = allowedValuesIter == null ? null :
                 StreamSupport.stream(allowedValuesIter.spliterator(), false).collect(Collectors.toList());
@@ -305,6 +306,9 @@ public class XRayGenericTestsCreatingConsumer implements TestRunConsumer<JiraInt
                     .orElseThrow(() -> new IllegalStateException(String.format(
                             "Failed to get an allowed option for field '%s' matching specified value '%s'. Allowed values: %s", fieldName, value,
                             allowedValues.stream().map(v -> ((CustomFieldOption) v).getValue()).collect(Collectors.joining(", ")))));
+        } else if (Objects.equals("user", fieldType)) {
+            User user =features.findUser(value);
+            return user;
         }
         throw new IllegalStateException("Unexpected field type for setting by ValuesExtractor: " + fieldType);
     }

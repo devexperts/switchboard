@@ -7,4 +7,5 @@ include 'integrations:cukes'
 include 'integrations:jira'
 include 'integrations:teamcity'
 include 'utils'
+include 'sandbox'
 

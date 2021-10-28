@@ -1,0 +1,47 @@
+/*
+ * Copyright (C) 2002 - 2021 Devexperts LLC
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/.
+ */
+
+plugins {
+    id 'java'
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation project(":api")
+    implementation project(":core")
+    implementation project(":runner")
+    implementation project(":utils")
+
+    compileOnly project(':integrations:javaparser')
+    compileOnly project(':integrations:bytecodeparser')
+    compileOnly project(':integrations:cukes')
+    compileOnly project(':integrations:jira')
+    compileOnly project(':integrations:teamcity')
+
+    implementation fileTree(dir: '../integrations', include: '**/*-all.jar')
+
+    implementation "com.fasterxml.jackson.core:jackson-databind:$jacksonVersion"
+
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.7.0'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.7.0'
+}
+
+assemble.dependsOn(
+        ":integrations:javaparser:clean",
+        ":integrations:javaparser:shadowJar",
+        ":integrations:bytecodeparser:clean",
+        ":integrations:bytecodeparser:shadowJar",
+        ":integrations:cukes:clean",
+        ":integrations:cukes:shadowJar",
+        ":integrations:jira:clean",
+        ":integrations:jira:shadowJar",
+        ":integrations:teamcity:clean",
+        ":integrations:teamcity:shadowJar"
+)

@@ -43,8 +43,8 @@ public final class LoggingTestRunConsumer<F extends IntegrationFeatures> impleme
                         .map(Test::getIdentifier)
                         .collect(Collectors.joining(",")))
                 .map(tr -> String.format("[%s]", tr))
-                .collect(Collectors.joining(",\n"));
-        log.info("Test runs: {}", testRunsString);
+                .collect(Collectors.joining(",\n\t"));
+        log.info("Test runs: \n\t{}", testRunsString);
         return null;
     }
 
