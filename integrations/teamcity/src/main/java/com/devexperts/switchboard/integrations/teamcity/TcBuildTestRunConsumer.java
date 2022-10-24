@@ -191,8 +191,8 @@ public class TcBuildTestRunConsumer implements TestRunConsumer<TeamCityIntegrati
                             String.format("TestRuns stacked by criterion %s with value %s have no agents matching agentRequirements of all TestRuns",
                                     agentStackingCriterion, runWithAgentsByCriterion.getKey()));
                 }
+                agents.forEach(a -> agentsUsed.computeIfAbsent(a, i -> new AtomicInteger(0)));
                 Agent leastUsed = agents.stream()
-                        .peek(a -> agentsUsed.computeIfAbsent(a, i -> new AtomicInteger(0)))
                         .min(Comparator.comparingInt(a -> agentsUsed.get(a).get()))
                         .orElseThrow(() -> new IllegalStateException("No matching common agents found"));
                 AtomicInteger counter = agentsUsed.get(leastUsed);

@@ -28,7 +28,6 @@ import com.github.javaparser.ast.expr.NormalAnnotationExpr;
 import com.github.javaparser.ast.expr.SingleMemberAnnotationExpr;
 import com.github.javaparser.ast.expr.StringLiteralExpr;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -37,6 +36,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -124,29 +124,16 @@ public final class AnnotationParser {
     }
 
     private static String checkQualified(String annotation, NodeList<ImportDeclaration> imports) {
-        String[] aSplit = annotation.split("\\.");
-        for (ImportDeclaration importDec : imports) {
-            String[] iSplit = importDec.getName().asString().split("\\.");
-            int diff = iSplit.length - aSplit.length;
-            for (int i = 0; i < iSplit.length - diff; i++) {
-                if (Objects.equals(iSplit[diff + i], aSplit[0])) {
-                    boolean match = true;
-                    for (int j = 1; j < iSplit.length - diff - i && match; j++) {
-                        if (!Objects.equals(iSplit[i + j], aSplit[j])) {
-                            match = false;
-                            break;
-                        }
-                    }
-                    if (match) {
-                        List<String> result = new ArrayList<>();
-                        result.addAll(Arrays.asList(iSplit).subList(0, diff + i));
-                        result.addAll(Arrays.asList(aSplit).subList(0, aSplit.length));
-                        return String.join(".", result);
-                    }
-                }
-            }
-        }
-        return annotation;
+        final Optional<ImportDeclaration> importDeclaration = imports.stream()
+                .filter(i -> i.getName().getIdentifier().equals(annotation.split("\\.")[0]))
+                .findFirst();
+        return importDeclaration.map(i -> i.getName()
+                        .getQualifier()
+                        .orElseThrow(() -> new IllegalStateException(String.format("No Qualifier for import %s", i)))
+                        .asString()
+                        .concat(".")
+                        .concat(annotation))
+                .orElse(annotation);
     }
 
     private static List<String> parseExpression(Expression expression) {

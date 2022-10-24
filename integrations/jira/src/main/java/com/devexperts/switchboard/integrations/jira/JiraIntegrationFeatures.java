@@ -162,7 +162,7 @@ public class JiraIntegrationFeatures implements IntegrationFeatures {
             return searchForIssues(jqlQuery, Integer.MAX_VALUE, 0, fields);
         }
         List<Issue> result = new ArrayList<>();
-        List<Issue> searchResult = new ArrayList<>();
+        List<Issue> searchResult;
         int i = 0;
         do {
             searchResult = searchForIssues(jqlQuery, searchQueryBatch, i, fields);

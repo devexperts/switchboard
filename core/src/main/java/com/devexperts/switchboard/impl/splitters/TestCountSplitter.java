@@ -76,11 +76,9 @@ public class TestCountSplitter<F extends IntegrationFeatures> implements TestSpl
     private <T> List<Set<T>> doSplit(List<T> tests) {
         List<Set<T>> result = new ArrayList<>();
 
-        for (int i = 0; i < tests.size(); ) {
-            int start = i;
+        for (int i = 0; i < tests.size(); i = i + count) {
             int end = Math.min(i + count, tests.size());
-            result.add(new HashSet<>(tests.subList(start, end)));
-            i = end;
+            result.add(new HashSet<>(tests.subList(i, end)));
         }
         return result;
     }

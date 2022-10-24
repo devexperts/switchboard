@@ -329,7 +329,7 @@ public abstract class IntegrationImpl<
                 .forEach(consumer);
     }
 
-    public static abstract class Builder<I extends IntegrationImpl<I, F, B>, F extends IntegrationFeatures, B extends Builder<I, F, B>> {
+    public abstract static class Builder<I extends IntegrationImpl<I, F, B>, F extends IntegrationFeatures, B extends Builder<I, F, B>> {
         protected String identifier;
         protected boolean runnable;
         protected List<TestExtractor<F>> testExtractors = new ArrayList<>();

@@ -21,7 +21,7 @@ public abstract class AttributedEntity implements Identifiable {
 
     protected AttributedEntity() {}
 
-    public AttributedEntity(String identifier, Attributes attributes) {
+    protected AttributedEntity(String identifier, Attributes attributes) {
         this.identifier = identifier;
         this.attributes = attributes;
     }

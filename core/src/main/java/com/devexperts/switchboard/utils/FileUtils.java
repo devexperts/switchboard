@@ -17,6 +17,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.function.Function;
+import java.util.stream.Stream;
 
 public final class FileUtils {
     private FileUtils() {}
@@ -63,7 +64,7 @@ public final class FileUtils {
         try {
             return path.toUri().toURL();
         } catch (MalformedURLException e) {
-            throw new RuntimeException("Malformed libs path: " + path.toString(), e);
+            throw new RuntimeException("Malformed libs path: " + path, e);
         }
     }
 
@@ -72,11 +73,10 @@ public final class FileUtils {
         String syntaxAndPattern = filePattern.startsWith("regex:") || filePattern.startsWith("glob:") ?
                 filePattern : ("glob:" + filePattern);
         for (String location : locations) {
-            try {
-                Path path = Paths.get(location);
-                PathMatcher matcher = path.getFileSystem().getPathMatcher(syntaxAndPattern);
-                Files.walk(path.toAbsolutePath())
-                        .filter(Files::isRegularFile)
+            Path path = Paths.get(location);
+            PathMatcher matcher = path.getFileSystem().getPathMatcher(syntaxAndPattern);
+            try (Stream<Path> walk = Files.walk(path.toAbsolutePath())) {
+                walk.filter(Files::isRegularFile)
                         .filter(matcher::matches)
                         .distinct()
                         .map(converter)

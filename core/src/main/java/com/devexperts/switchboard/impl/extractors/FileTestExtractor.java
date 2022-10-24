@@ -38,7 +38,7 @@ public abstract class FileTestExtractor<F extends IntegrationFeatures> implement
 
     protected FileTestExtractor() {}
 
-    public FileTestExtractor(String identifier, List<String> testLocations) {
+    protected FileTestExtractor(String identifier, List<String> testLocations) {
         this.identifier = identifier;
         this.testLocations = testLocations;
     }
@@ -68,7 +68,9 @@ public abstract class FileTestExtractor<F extends IntegrationFeatures> implement
         long start = System.currentTimeMillis();
         List<Path> paths = FileUtils.listFilePathsRecursively(getFilePattern(), Arguments.checkNotEmpty(testLocations, "testLocations"));
         log.info("Collected {} file paths from specified locations {} by pattern '{}'", paths.size(), getFilePattern(), testLocations);
-        log.trace("Collected paths:\n\t{}", paths.stream().map(Path::toString).collect(Collectors.joining("\n\t")));
+        if (log.isTraceEnabled()) {
+            log.trace("Collected paths:\n\t{}", paths.stream().map(Path::toString).collect(Collectors.joining("\n\t")));
+        }
 
         List<Test> tests = paths
                 .stream()
@@ -77,7 +79,9 @@ public abstract class FileTestExtractor<F extends IntegrationFeatures> implement
                 .flatMap(Collection::stream)
                 .collect(Collectors.toList());
         log.info("Extracted {} tests from {} files in {} millis", tests.size(), paths.size(), System.currentTimeMillis() - start);
-        log.trace("Extracted tests: {}\n\t", tests.stream().map(Test::getIdentifier).collect(Collectors.joining("\n\t")));
+        if (log.isTraceEnabled()) {
+            log.trace("Extracted tests: {}\n\t", tests.stream().map(Test::getIdentifier).collect(Collectors.joining("\n\t")));
+        }
         return tests;
     }
 }
