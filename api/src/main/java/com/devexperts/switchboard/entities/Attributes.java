@@ -132,7 +132,7 @@ public final class Attributes {
     }
 
     public static final class Builder {
-        private LinkedHashMap<String, LinkedHashMap<String, LinkedHashSet<String>>> attributes = new LinkedHashMap<>();
+        private final LinkedHashMap<String, LinkedHashMap<String, LinkedHashSet<String>>> attributes = new LinkedHashMap<>();
 
         private Builder() {}
 
@@ -259,7 +259,7 @@ public final class Attributes {
         }
 
         /**
-         * Removes the existing attribute by it's key
+         * Removes the existing attribute by its key
          *
          * @param attributeKey key of attribute to remove
          * @return updated instance

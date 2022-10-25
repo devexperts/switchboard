@@ -12,7 +12,7 @@ import com.devexperts.switchboard.entities.TestRun;
 import java.util.List;
 
 /**
- * A component processing (complementing, decoding, splitting etc) specified tests runs
+ * A component processing (complementing, decoding, splitting etc.) specified tests runs
  */
 public interface TestRunProcessor<F extends IntegrationFeatures> extends IntegrationComponent<F> {
 

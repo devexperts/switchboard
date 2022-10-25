@@ -34,7 +34,7 @@ public class ComponentReference<F extends IntegrationFeatures>
     }
 
     @Override
-    public void init(F integrationFeatures) {/*do nothing: referenced component will be inited by it's own integration*/}
+    public void init(F integrationFeatures) {/*do nothing: referenced component will be inited by its own integration*/}
 
     @Override
     public String getIdentifier() {
@@ -77,5 +77,5 @@ public class ComponentReference<F extends IntegrationFeatures>
     }
 
     @Override
-    public void close() {/*do nothing: referenced component will be closed by it's own integration*/}
+    public void close() {/*do nothing: referenced component will be closed by its own integration*/}
 }

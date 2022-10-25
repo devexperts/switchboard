@@ -22,8 +22,8 @@ import java.util.stream.Collectors;
 
 /**
  * An implementation of {@link TestProcessor} providing ability to split single word Cucumber tags
- * into a `key - empty_value_key - single_value" {@link Attributes} values
- * splitting them by a specified {@link escapedValueSeparator}
+ * into a `key - empty_value_key - single_value` {@link Attributes} values
+ * splitting them by a specified {@link #escapedValueSeparator}
  */
 public class CukesTagTestProcessor implements TestProcessor<CukesIntegrationFeatures> {
     private static final String DEFAULT_VALUE_SEPARATOR = "#";

@@ -12,7 +12,7 @@ import com.devexperts.switchboard.utils.Arguments;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
- * An implementation of {@link AttributePredicate} which tests whether the {@link Attributes} has a single key matching the specified regex {@link attributeKeyRegex}
+ * An implementation of {@link AttributePredicate} which tests whether the {@link Attributes} has a single key matching the specified regex {@link #attributeKeyRegex}
  */
 public class AttributeIsPresent implements AttributePredicate {
     @JsonProperty(required = true)

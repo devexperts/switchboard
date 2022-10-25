@@ -223,19 +223,19 @@ public class XRayGenericTestsCreatingConsumer implements TestRunConsumer<JiraInt
         }
 
         // fill the values suitable for direct builder setting:
-        if (Objects.equals("Component/s", fieldName)) {
+        if ("Component/s".equals(fieldName)) {
             return builder.setComponentsNames(valuesExtractor.getTestValues(test));
         }
-        if (Objects.equals("Affects Version/s", fieldName)) {
+        if ("Affects Version/s".equals(fieldName)) {
             return builder.setAffectedVersionsNames(valuesExtractor.getTestValues(test));
         }
-        if (Objects.equals("Fix Version/s", fieldName)) {
+        if ("Fix Version/s".equals(fieldName)) {
             return builder.setFixVersionsNames(valuesExtractor.getTestValues(test));
         }
-        if (Objects.equals("Description", fieldName)) {
+        if ("Description".equals(fieldName)) {
             return builder.setDescription(value);
         }
-        if (Objects.equals("Due Date", fieldName)) {
+        if ("Due Date".equals(fieldName)) {
             return builder.setDueDate(ISODateTimeFormat.date().parseDateTime(value));
         }
 

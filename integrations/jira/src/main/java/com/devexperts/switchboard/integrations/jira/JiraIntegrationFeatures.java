@@ -64,7 +64,7 @@ public class JiraIntegrationFeatures implements IntegrationFeatures {
 
 
     /**
-     * Returns a the {@link IssueType} for the specified project with specified {@link IssueType#name}
+     * Returns a the {@link IssueType} for the specified project with specified {@link IssueType#getName()}
      *
      * @param projectKey    unique key of the Jira project
      * @param issueTypeName name of {@link IssueType} to search
@@ -91,7 +91,7 @@ public class JiraIntegrationFeatures implements IntegrationFeatures {
     }
 
     /**
-     * Returns a the {@link BasicComponent} for the specified project with specified {@link BasicComponent#name}
+     * Returns a the {@link BasicComponent} for the specified project with specified {@link BasicComponent#getName()}
      *
      * @param projectKey    unique key of the Jira project
      * @param componentName name of {@link BasicComponent} to search

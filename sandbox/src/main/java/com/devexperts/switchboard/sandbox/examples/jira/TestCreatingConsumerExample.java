@@ -59,18 +59,16 @@ public final class TestCreatingConsumerExample {
     private static JiraIntegration buildIntegration(boolean runnable) {
         ComponentReference extractorReference = new ComponentReference<>("JunitExtractor", "ExampleJavaParserIntegration");
         return JiraIntegration.newBuilder()
-            .identifier("JiraIntegration")
-            .isRunnable(runnable)
-            .testExtractors(Collections.singletonList(extractorReference))
-            .testRunConsumers(Collections.singletonList(buildConsumer()))
-            .uri("https://jira.somewhere.com")                          // base jira url
-            .login(
-                "%testImportLogin%")                                     // this is a placeholder format. Add env variable 'testImportLogin=<your_login>'
-            .password(
-                "%testImportPassword%")                               // this is a placeholder format. Add env variable 'testImportPassword=<your_password>'
-            .socketTimeout(30)                                              // single request timeout, seconds
-            .searchQueryBatch(100)                                          // maximum issues batch returned per request
-            .build();
+                .identifier("JiraIntegration")
+                .isRunnable(runnable)
+                .testExtractors(Collections.singletonList(extractorReference))
+                .testRunConsumers(Collections.singletonList(buildConsumer()))
+                .uri("https://jira.somewhere.com")                          // base jira url
+                .login("%testImportLogin%")                                 // this is a placeholder format. Add env variable 'testImportLogin=<your_login>'
+                .password("%testImportPassword%")                           // this is a placeholder format. Add env variable 'testImportPassword=<your_password>'
+                .socketTimeout(30)                                          // single request timeout, seconds
+                .searchQueryBatch(100)                                      // maximum issues batch returned per request
+                .build();
     }
 
     private static TestRunConsumer<JiraIntegrationFeatures> buildConsumer() {
@@ -91,11 +89,11 @@ public final class TestCreatingConsumerExample {
         // Notice that section has no special header and thus has no key. Actions and result are parsed from formatted comments inside test ('preconditions_'comments' section of 'comments' Attribute).
         blockExtractors.add(Pair.of("",
             new EnumeratingTestDescriptionFormatter(new AttributeValuesExtractor(Attributes.COMMENTS_PROP, Attributes.COMMENTS_PROP, "\n"),
-                "^Action: *(.+)", "^Result: *(.+)",     // specify format to parse for Actions and Results:
-                "*Actions:*", "*Results:*",          // specify headers for Actions and Results:
-                "# ",                                           // a placeholder for Action/Result number
+                "^Action: *(.+)", "^Result: *(.+)",            // specify format to parse for Actions and Results:
+                "*Actions:*", "*Results:*",                    // specify headers for Actions and Results:
+                "# ",                                          // a placeholder for Action/Result number
                 "Check result (%s)",                           // format for a marker step linking action with result number
-                "After step (%s) - ")));                          // format for result beginning
+                "After step (%s) - ")));                       // format for result beginning
         // - Postconditions which we get from 'postconditions_comments' section of 'comments' Attribute
         blockExtractors.add(Pair.of("*Postconditions:*",
             new AttributeValuesExtractor(Attributes.POSTCONDITIONS_COMMENTS_PROP, Attributes.JAVADOC_PROP, "\n\n")));

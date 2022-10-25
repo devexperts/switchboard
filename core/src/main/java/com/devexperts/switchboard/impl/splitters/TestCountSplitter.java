@@ -23,8 +23,8 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
- * Implementation of {@link TestSplitter} based on a maximum test count in TestRun specified in {@link count}
- * If {@link count} is set < 1 no splitting is performed and a TestRun with a copy of initial Test list is returned
+ * Implementation of {@link TestSplitter} based on a maximum test count in TestRun specified in {@link #count}
+ * If {@link #count} is set < 1 no splitting is performed and a TestRun with a copy of initial Test list is returned
  */
 public class TestCountSplitter<F extends IntegrationFeatures> implements TestSplitter<F> {
     @JsonProperty(required = true)

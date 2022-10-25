@@ -17,7 +17,7 @@ import java.util.stream.Collectors;
 
 /**
  * This implementation of {@link TestRunValuesExtractor} for creating a value consisting of {@link Test#toRunnerString()}
- * values of tests in TestRun joined by {@link valuesSeparator}
+ * values of tests in TestRun joined by {@link #valuesSeparator}
  */
 public class TestsToStringValuesExtractor implements TestRunValuesExtractor {
     @JsonProperty(required = true)

@@ -75,10 +75,10 @@ public final class CukesExtract {
         splitterMap.put(new AttributeHasSingleValue("UserRole", ""), userRoleSplitter);
         splitterMap.put(new AttributeHasSingleValue("UserName", ""), userNameSplitter);
 
-        // Split tests by @UserRole tag value (if appliable), else by @UserName tag value (if appliable), else by test count in each test run
+        // Split tests by @UserRole tag value (if applicable), else by @UserName tag value (if applicable), else by test count in each test run
         CompositeSplitter compositeSplitter = new CompositeSplitter("UserSplitter", splitterMap, countSplitter);
 
-        // Create filter droppring tests annotated as Negative
+        // Create filter dropping tests annotated as Negative
         AttributesFilter filter = new AttributesFilter("DropRegressionFilter",new AttributeIsPresent("Negative").negate());
 
         return CukesIntegration.newBuilder()

@@ -15,11 +15,11 @@ import java.util.stream.Collectors;
 
 /**
  * This implementation of {@link ValuesExtractor} can be initiated by {@link Test}
- * Returns a test case description consisted of Actions (defined by {@link actionRegex}) and Results (defined by {@link resultRegex}).
- * Each action leading to result is followed by additional row like 'Check result (1)' (format specified by {@link checkResultFormat})
+ * Returns a test case description consisted of Actions (defined by {@link #actionRegex}) and Results (defined by {@link #resultRegex}).
+ * Each action leading to result is followed by additional row like 'Check result (1)' (format specified by {@link #checkResultFormat})
  * referencing the result row number in 'Results' block
  * Each result starts with reference to action like 'After step (1) - ...'
- * Each action and result start with {@link rowStartTemplate} providing row enumeration in target environment (e.g. '# " for Jira).
+ * Each action and result start with {@link #rowStartTemplate} providing row enumeration in target environment (e.g. '# " for Jira).
  */
 public class EnumeratingTestDescriptionFormatter implements TestValuesExtractor {
 

@@ -17,14 +17,14 @@ import java.util.function.BiPredicate;
 
 /**
  * An implementation of {@link AttributePredicate} which tests whether the {@link Attributes} has values
- * contains {@link attributeValues} (according to {@link Modifier specified})
- * with a value key  matching the specified regex {@link attributeValueKeyRegex}
- * and key matching the specified regex {@link attributeKeyRegex}.
+ * contains {@link #attributeValues} (according to {@link Modifier specified})
+ * with a value key  matching the specified regex {@link #attributeValueKeyRegex}
+ * and key matching the specified regex {@link #attributeKeyRegex}.
  */
 public class AttributeValueSetContains implements AttributePredicate {
     /**
      * Enum specifying the checked relation between a set of attribute values and the specified collection of values:
-     * either the set of attribute values contains {@link ALL}, {@link ANY} or {@link EXACTLY} the same values as specified
+     * either the set of attribute values contains {@link #ALL}, {@link #ANY} or {@link #EXACTLY} the same values as specified
      */
     public enum Modifier {
         ALL(Set::containsAll),

@@ -10,7 +10,7 @@ package com.devexperts.switchboard.api;
 import com.fasterxml.jackson.annotation.JsonIgnoreType;
 
 /**
- * This interface represents the features instantiated per {@link Integration> instance and then passed to each integration component
+ * This interface represents the features instantiated per {@link Integration} instance and then passed to each integration component
  * e.g. jira/teamcity/http client, DB connection etc.
  */
 @JsonIgnoreType

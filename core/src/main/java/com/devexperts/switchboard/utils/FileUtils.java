@@ -23,7 +23,7 @@ public final class FileUtils {
     private FileUtils() {}
 
     /**
-     * Collects recursively paths to all files within specified {@link locations} matching specified regex {@link filePattern}
+     * Collects recursively paths to all files within specified {@code locations} matching specified regex {@code filePattern}
      *
      * @param filePattern pattern to check collected file match. The default format is glob; regex can be used starting format value from "regex:"
      * @param locations   collection of String locations to search
@@ -34,7 +34,7 @@ public final class FileUtils {
     }
 
     /**
-     * Collects recursively URLs to all files within specified {@link locations} matching specified regex {@link filePattern}
+     * Collects recursively URLs to all files within specified {@code locations} matching specified regex {@code filePattern}
      *
      * @param filePattern pattern to check collected file match. The default format is glob; regex can be used starting format value from "regex:"
      * @param locations   locations collection of String locations to search
@@ -45,7 +45,7 @@ public final class FileUtils {
     }
 
     /**
-     * Transforms the specified String path to URL
+     * Transforms the specified String path to {@link URL}
      *
      * @param path to transform
      * @return URL from specified path
@@ -55,7 +55,7 @@ public final class FileUtils {
     }
 
     /**
-     * Transforms the specified Path path to URL
+     * Transforms the specified {@link Path} to {@link URL}
      *
      * @param path to transform
      * @return URL from specified path

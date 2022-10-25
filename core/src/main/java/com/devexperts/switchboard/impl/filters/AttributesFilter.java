@@ -14,7 +14,7 @@ import com.devexperts.switchboard.utils.Arguments;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
- * Implementation of TestFilter based on checking {@link Test.attributes} by specified {@link AttributePredicate}
+ * Implementation of TestFilter based on checking {@link Test#getAttributes()} by specified {@link AttributePredicate}
  */
 public class AttributesFilter<F extends IntegrationFeatures> extends DefaultTestFilter<F> {
     @JsonProperty(required = true)

@@ -20,7 +20,7 @@ import java.util.Set;
 /**
  * This implementation of {@link ValuesExtractor} can be initiated by both {@link Test} and {@link TestRun}
  * for extracting from {@link Attributes} a single TestAttribute value
- * under specified {@link attributeKey} and {@link attributeValueKey}
+ * under specified {@link #attributeKey} and {@link #attributeValueKey}
  */
 public class AttributeValuesExtractor implements TestRunValuesExtractor, TestValuesExtractor {
     @JsonProperty(required = true)

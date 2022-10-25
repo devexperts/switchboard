@@ -63,8 +63,8 @@ public class TestRun extends AttributedEntity {
 
     public static final class Builder {
         private String identifier;
-        private Set<Test> tests = new HashSet<>();
-        private Attributes.Builder attributes = Attributes.newBuilder();
+        private final Set<Test> tests = new HashSet<>();
+        private final Attributes.Builder attributes = Attributes.newBuilder();
 
         private Builder() {}
 
@@ -79,12 +79,12 @@ public class TestRun extends AttributedEntity {
         }
 
         public Builder putAttributes(Attributes attributes) {
-            this.attributes.putAttributes(attributes).build();
+            this.attributes.putAttributes(attributes);
             return this;
         }
 
         public Builder mergeAttributes(Attributes attributes) {
-            this.attributes.mergeAttributes(attributes).build();
+            this.attributes.mergeAttributes(attributes);
             return this;
         }
 
