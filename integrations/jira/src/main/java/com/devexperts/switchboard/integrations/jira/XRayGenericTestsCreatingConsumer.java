@@ -15,7 +15,6 @@ import com.atlassian.jira.rest.client.api.domain.CustomFieldOption;
 import com.atlassian.jira.rest.client.api.domain.Issue;
 import com.atlassian.jira.rest.client.api.domain.IssueField;
 import com.atlassian.jira.rest.client.api.domain.TimeTracking;
-import com.atlassian.jira.rest.client.api.domain.User;
 import com.atlassian.jira.rest.client.api.domain.input.IssueInput;
 import com.atlassian.jira.rest.client.api.domain.input.IssueInputBuilder;
 import com.devexperts.switchboard.api.TestRunConsumer;
@@ -30,6 +29,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
+import org.joda.time.DateTime;
 import org.joda.time.format.ISODateTimeFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -56,6 +56,8 @@ public class XRayGenericTestsCreatingConsumer implements TestRunConsumer<JiraInt
     private static final Logger log = LoggerFactory.getLogger(XRayGenericTestsCreatingConsumer.class);
     private static final String GENERIC_TEST_DEFINITION_FIELD = "Generic Test Definition";
     private static final String JIRA_ISSUE_KEY_NAME = "key";
+    private static final String TIME_TRACKING_FIELD = "Time Tracking";
+    private static final String CHILD = "child";
 
     @JsonProperty(required = true)
     private String identifier;
@@ -165,10 +167,11 @@ public class XRayGenericTestsCreatingConsumer implements TestRunConsumer<JiraInt
                         result.put(input, false);
                     }
                 } else {
-                    log.warn("Found {} issues linked to {} : {}", linked.size(), testDefinition, linked.stream()
+                    String linkedIds = linked.stream()
                             .map(BasicIssue::getId)
                             .map(String::valueOf)
-                            .collect(Collectors.joining(", ")));
+                            .collect(Collectors.joining(", "));
+                    log.warn("Found {} issues linked to {} : {}", linked.size(), testDefinition, linkedIds);
                     result.put(input, false);
                 }
             }
@@ -204,8 +207,9 @@ public class XRayGenericTestsCreatingConsumer implements TestRunConsumer<JiraInt
             }
         }
 
-        if (fields.get("Time Tracking").isRequired() && !filledFields.contains("Time Tracking")) {
-            builder.setFieldValue(fields.get("Time Tracking").getId(), new TimeTracking(1, null, null));
+        final CimFieldInfo timeTrackingField = fields.get(TIME_TRACKING_FIELD);
+        if (timeTrackingField.isRequired() && !filledFields.contains(TIME_TRACKING_FIELD)) {
+            builder.setFieldValue(timeTrackingField.getId(), new TimeTracking(1, null, null));
         }
         return builder.build();
     }
@@ -219,19 +223,19 @@ public class XRayGenericTestsCreatingConsumer implements TestRunConsumer<JiraInt
         }
 
         // fill the values suitable for direct builder setting:
-        if (Objects.equals("Component/s", fieldName)) {
+        if ("Component/s".equals(fieldName)) {
             return builder.setComponentsNames(valuesExtractor.getTestValues(test));
         }
-        if (Objects.equals("Affects Version/s", fieldName)) {
+        if ("Affects Version/s".equals(fieldName)) {
             return builder.setAffectedVersionsNames(valuesExtractor.getTestValues(test));
         }
-        if (Objects.equals("Fix Version/s", fieldName)) {
+        if ("Fix Version/s".equals(fieldName)) {
             return builder.setFixVersionsNames(valuesExtractor.getTestValues(test));
         }
-        if (Objects.equals("Description", fieldName)) {
+        if ("Description".equals(fieldName)) {
             return builder.setDescription(value);
         }
-        if (Objects.equals("Due Date", fieldName)) {
+        if ("Due Date".equals(fieldName)) {
             return builder.setDueDate(ISODateTimeFormat.date().parseDateTime(value));
         }
 
@@ -257,13 +261,13 @@ public class XRayGenericTestsCreatingConsumer implements TestRunConsumer<JiraInt
                 field.getAllowedValues(), value));
     }
 
-    private Object transformValue(String fieldName, String fieldType, Iterable<Object> allowedValuesIter, String value)
-    {
+    private Object transformValue(String fieldName, String fieldType, Iterable<Object> allowedValuesIter, String value) {
         List<Object> allowedValues = allowedValuesIter == null ? null :
                 StreamSupport.stream(allowedValuesIter.spliterator(), false).collect(Collectors.toList());
         if (Arrays.asList("string", "any").contains(fieldType)) {
             return value;
-        } else if (Objects.equals("number", fieldType)) {
+        }
+        if ("number".equals(fieldType)) {
             if (value.matches("\\d+")) {
                 return Integer.valueOf(value);
             }
@@ -271,46 +275,65 @@ public class XRayGenericTestsCreatingConsumer implements TestRunConsumer<JiraInt
                 return Double.valueOf(value);
             }
             throw new IllegalStateException(String.format("Unexpected value for a number field '%s': %s", fieldName, value));
-        } else if (Objects.equals("date", fieldType)) {
-            try {
-                return ISODateTimeFormat.date().parseDateTime(value);
-            } catch (Exception e) {
-                throw new IllegalStateException(String.format("Failed to parse date value '%s' for '%s' field",
-                        value, fieldName), e);
-            }
-        } else if (Objects.equals("timetracking", fieldType)) {
-            if (value.matches("\\d+")) {
-                return new TimeTracking(Integer.valueOf(value), null, null);
-            } else {
-                throw new IllegalArgumentException("Expected originalEstimateMinutes value passed to timetracking as an integer, found: " + value);
-            }
-        } else if (Objects.equals("priority", fieldType)) {
-            if (allowedValues == null || allowedValues.isEmpty()) {
-                throw new IllegalStateException("Failed to get allowed values for priority field " + fieldName);
-            }
-            return allowedValues.stream()
-                    .map(v -> (BasicPriority) v)
-                    .filter(p -> p.getName().equals(value) || p.getName().matches(value + " \\(\\d+\\)"))
-                    .findFirst()
-                    .orElseThrow(() -> new IllegalStateException(String.format(
-                            "Failed to get an allowed priority matching specified value '%s'. Allowed values: %s", value,
-                            allowedValues.stream().map(v -> ((CustomFieldOption) v).getValue()).collect(Collectors.joining(", ")))));
-        } else if (Objects.equals("option", fieldType)) {
-            if (allowedValues == null || allowedValues.isEmpty()) {
-                throw new IllegalStateException("Failed to get allowed values for options field " + fieldName);
-            }
-            return allowedValues.stream()
-                    .map(v -> parseOption(v, fieldName))
-                    .filter(v -> Objects.equals(value, v.getValue()))
-                    .findFirst()
-                    .orElseThrow(() -> new IllegalStateException(String.format(
-                            "Failed to get an allowed option for field '%s' matching specified value '%s'. Allowed values: %s", fieldName, value,
-                            allowedValues.stream().map(v -> ((CustomFieldOption) v).getValue()).collect(Collectors.joining(", ")))));
-        } else if (Objects.equals("user", fieldType)) {
-            User user =features.findUser(value);
-            return user;
+        }
+        if ("date".equals(fieldType)) {
+            return getDate(fieldName, value);
+        }
+        if ("timetracking".equals(fieldType)) {
+            return getTimeTracking(value);
+        }
+        if ("priority".equals(fieldType)) {
+            return getPriority(fieldName, value, allowedValues);
+        }
+        if ("option".equals(fieldType)) {
+            return getOption(fieldName, value, allowedValues);
+        }
+        if ("user".equals(fieldType)) {
+            return features.findUser(value);
         }
         throw new IllegalStateException("Unexpected field type for setting by ValuesExtractor: " + fieldType);
+    }
+
+    private CustomFieldOption getOption(String fieldName, String value, List<Object> allowedValues) {
+        if (allowedValues == null || allowedValues.isEmpty()) {
+            throw new IllegalStateException("Failed to get allowed values for options field " + fieldName);
+        }
+        return allowedValues.stream()
+                .map(v -> parseOption(v, fieldName))
+                .filter(v -> Objects.equals(value, v.getValue()))
+                .findFirst()
+                .orElseThrow(() -> new IllegalStateException(String.format(
+                        "Failed to get an allowed option for field '%s' matching specified value '%s'. Allowed values: %s", fieldName, value,
+                        allowedValues.stream().map(v -> ((CustomFieldOption) v).getValue()).collect(Collectors.joining(", ")))));
+    }
+
+    private BasicPriority getPriority(String fieldName, String value, List<Object> allowedValues) {
+        if (allowedValues == null || allowedValues.isEmpty()) {
+            throw new IllegalStateException("Failed to get allowed values for priority field " + fieldName);
+        }
+        return allowedValues.stream()
+                .map(BasicPriority.class::cast)
+                .filter(p -> p.getName().equals(value) || p.getName().matches(value + " \\(\\d+\\)"))
+                .findFirst()
+                .orElseThrow(() -> new IllegalStateException(String.format(
+                        "Failed to get an allowed priority matching specified value '%s'. Allowed values: %s", value,
+                        allowedValues.stream().map(v -> ((CustomFieldOption) v).getValue()).collect(Collectors.joining(", ")))));
+    }
+
+    private TimeTracking getTimeTracking(String value) {
+        if (value.matches("\\d+")) {
+            return new TimeTracking(Integer.valueOf(value), null, null);
+        }
+        throw new IllegalArgumentException("Expected originalEstimateMinutes value passed to timetracking as an integer, found: " + value);
+    }
+
+    private DateTime getDate(String fieldName, String value) {
+        try {
+            return ISODateTimeFormat.date().parseDateTime(value);
+        } catch (Exception e) {
+            throw new IllegalStateException(String.format("Failed to parse date value '%s' for '%s' field",
+                    value, fieldName), e);
+        }
     }
 
     private static CustomFieldOption parseOption(Object o, String fieldName) {
@@ -327,7 +350,7 @@ public class XRayGenericTestsCreatingConsumer implements TestRunConsumer<JiraInt
                     children.add(parseOption(jChild, fieldName + ", available value child " + jChild));
                 }
                 return new CustomFieldOption(j.getLong("id"), new URI(j.getString("self")), j.getString("value"),
-                        children, j.has("child") ? parseOption(j.get("child"), fieldName + ", available value child " + j.get("child")) : null);
+                        children, j.has(CHILD) ? parseOption(j.get(CHILD), fieldName + ", available value child " + j.get(CHILD)) : null);
             } catch (JSONException | URISyntaxException je) {
                 throw new RuntimeException("Failed to parse available value for field " + fieldName, je);
             }

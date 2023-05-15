@@ -39,6 +39,10 @@ import java.util.Map;
 @SuppressWarnings("unchecked")
 public final class TestCreatingConsumerExample {
 
+    private static final String TEST_DETAILS = "TestDetails";
+    private static final String SEVERITY = "severity";
+    private static final String PRIORITY = "priority";
+
     private TestCreatingConsumerExample() {}
 
     public static void main(String[] args) throws Exception {
@@ -55,18 +59,16 @@ public final class TestCreatingConsumerExample {
     private static JiraIntegration buildIntegration(boolean runnable) {
         ComponentReference extractorReference = new ComponentReference<>("JunitExtractor", "ExampleJavaParserIntegration");
         return JiraIntegration.newBuilder()
-            .identifier("JiraIntegration")
-            .isRunnable(runnable)
-            .testExtractors(Collections.singletonList(extractorReference))
-            .testRunConsumers(Collections.singletonList(buildConsumer()))
-            .uri("https://jira.somewhere.com")                          // base jira url
-            .login(
-                "%testImportLogin%")                                     // this is a placeholder format. Add env variable 'testImportLogin=<your_login>'
-            .password(
-                "%testImportPassword%")                               // this is a placeholder format. Add env variable 'testImportPassword=<your_password>'
-            .socketTimeout(30)                                              // single request timeout, seconds
-            .searchQueryBatch(100)                                          // maximum issues batch returned per request
-            .build();
+                .identifier("JiraIntegration")
+                .isRunnable(runnable)
+                .testExtractors(Collections.singletonList(extractorReference))
+                .testRunConsumers(Collections.singletonList(buildConsumer()))
+                .uri("https://jira.somewhere.com")                          // base jira url
+                .login("%testImportLogin%")                                 // this is a placeholder format. Add env variable 'testImportLogin=<your_login>'
+                .password("%testImportPassword%")                           // this is a placeholder format. Add env variable 'testImportPassword=<your_password>'
+                .socketTimeout(30)                                          // single request timeout, seconds
+                .searchQueryBatch(100)                                      // maximum issues batch returned per request
+                .build();
     }
 
     private static TestRunConsumer<JiraIntegrationFeatures> buildConsumer() {
@@ -87,11 +89,11 @@ public final class TestCreatingConsumerExample {
         // Notice that section has no special header and thus has no key. Actions and result are parsed from formatted comments inside test ('preconditions_'comments' section of 'comments' Attribute).
         blockExtractors.add(Pair.of("",
             new EnumeratingTestDescriptionFormatter(new AttributeValuesExtractor(Attributes.COMMENTS_PROP, Attributes.COMMENTS_PROP, "\n"),
-                "^Action: *(.+)", "^Result: *(.+)",     // specify format to parse for Actions and Results:
-                "*Actions:*", "*Results:*",          // specify headers for Actions and Results:
-                "# ",                                           // a placeholder for Action/Result number
+                "^Action: *(.+)", "^Result: *(.+)",            // specify format to parse for Actions and Results:
+                "*Actions:*", "*Results:*",                    // specify headers for Actions and Results:
+                "# ",                                          // a placeholder for Action/Result number
                 "Check result (%s)",                           // format for a marker step linking action with result number
-                "After step (%s) - ")));                          // format for result beginning
+                "After step (%s) - ")));                       // format for result beginning
         // - Postconditions which we get from 'postconditions_comments' section of 'comments' Attribute
         blockExtractors.add(Pair.of("*Postconditions:*",
             new AttributeValuesExtractor(Attributes.POSTCONDITIONS_COMMENTS_PROP, Attributes.JAVADOC_PROP, "\n\n")));
@@ -109,25 +111,25 @@ public final class TestCreatingConsumerExample {
 
         // Severity requires mapping between enums in tests and constants of Jira enum fields:
         fieldValuesExtractors.put("Severity", new ConditionalValueExtractor(Arrays.asList(
-            Pair.of(new AttributeValueMatches("TestDetails", "severity", "Severity.SHOWSTOPPER"),
+            Pair.of(new AttributeValueMatches(TEST_DETAILS, SEVERITY, "Severity.SHOWSTOPPER"),
                 new ConstantValuesExtractor("Showstopper")),
-            Pair.of(new AttributeValueMatches("TestDetails", "severity", "Severity.MINOR_FUNCTIONAL"),
+            Pair.of(new AttributeValueMatches(TEST_DETAILS, SEVERITY, "Severity.MINOR_FUNCTIONAL"),
                 new ConstantValuesExtractor("Minor functional")),
-            Pair.of(new AttributeValueMatches("TestDetails", "severity", "Severity.FUNCTIONAL"), new ConstantValuesExtractor("Functional")),
-            Pair.of(new AttributeValueMatches("TestDetails", "severity", "Severity.USABILITY"), new ConstantValuesExtractor("Usability")),
-            Pair.of(new AttributeValueMatches("TestDetails", "severity", "Severity.GLITCH"), new ConstantValuesExtractor("Glitch")),
-            Pair.of(new AttributeValueMatches("TestDetails", "severity", "Severity.PERFORMANCE"),
+            Pair.of(new AttributeValueMatches(TEST_DETAILS, SEVERITY, "Severity.FUNCTIONAL"), new ConstantValuesExtractor("Functional")),
+            Pair.of(new AttributeValueMatches(TEST_DETAILS, SEVERITY, "Severity.USABILITY"), new ConstantValuesExtractor("Usability")),
+            Pair.of(new AttributeValueMatches(TEST_DETAILS, SEVERITY, "Severity.GLITCH"), new ConstantValuesExtractor("Glitch")),
+            Pair.of(new AttributeValueMatches(TEST_DETAILS, SEVERITY, "Severity.PERFORMANCE"),
                 new ConstantValuesExtractor("Performance"))),
             // the default value:
             new ConstantValuesExtractor("Functional")));
 
         // Priority requires mapping between enums in tests and constants of Jira enum fields:
         fieldValuesExtractors.put("Priority", new ConditionalValueExtractor(Arrays.asList(
-            Pair.of(new AttributeValueMatches("TestDetails", "priority", "Priority.ASAP"), new ConstantValuesExtractor("ASAP")),
-            Pair.of(new AttributeValueMatches("TestDetails", "priority", "Priority.CRITICAL"), new ConstantValuesExtractor("Critical")),
-            Pair.of(new AttributeValueMatches("TestDetails", "priority", "Priority.URGENT"), new ConstantValuesExtractor("Urgent")),
-            Pair.of(new AttributeValueMatches("TestDetails", "priority", "Priority.NORMAL"), new ConstantValuesExtractor("Normal")),
-            Pair.of(new AttributeValueMatches("TestDetails", "priority", "Priority.LOW_PRIORITY"),
+            Pair.of(new AttributeValueMatches(TEST_DETAILS, PRIORITY, "Priority.ASAP"), new ConstantValuesExtractor("ASAP")),
+            Pair.of(new AttributeValueMatches(TEST_DETAILS, PRIORITY, "Priority.CRITICAL"), new ConstantValuesExtractor("Critical")),
+            Pair.of(new AttributeValueMatches(TEST_DETAILS, PRIORITY, "Priority.URGENT"), new ConstantValuesExtractor("Urgent")),
+            Pair.of(new AttributeValueMatches(TEST_DETAILS, PRIORITY, "Priority.NORMAL"), new ConstantValuesExtractor("Normal")),
+            Pair.of(new AttributeValueMatches(TEST_DETAILS, PRIORITY, "Priority.LOW_PRIORITY"),
                 new ConstantValuesExtractor("Low priority"))),
             // the default value:
             new ConstantValuesExtractor("Normal")));
@@ -137,13 +139,13 @@ public final class TestCreatingConsumerExample {
             // the default value:
             new ConstantValuesExtractor("Automated")));
 
-        fieldValuesExtractors.put("Unique ID", new AttributeValuesExtractor("TestDetails", "uniqueID", ","));
-        fieldValuesExtractors.put("Time Tracking", new AttributeValuesExtractor("TestDetails", "manualEstimate", ","));
+        fieldValuesExtractors.put("Unique ID", new AttributeValuesExtractor(TEST_DETAILS, "uniqueID", ","));
+        fieldValuesExtractors.put("Time Tracking", new AttributeValuesExtractor(TEST_DETAILS, "manualEstimate", ","));
         fieldValuesExtractors.put("Test Repository Path", new AttributeValuesExtractor("RepositoryPath", "", ","));
 
         fieldValuesExtractors.put("Component/s", new ConditionalValueExtractor(Arrays.asList(
-            Pair.of(new AttributeValueMatches("TestDetails", "Component", "Components.FRONTEND"), new ConstantValuesExtractor("Frontend")),
-            Pair.of(new AttributeValueMatches("TestDetails", "Component", "Components.BACKEND"), new ConstantValuesExtractor("Backend"))),
+            Pair.of(new AttributeValueMatches(TEST_DETAILS, "Component", "Components.FRONTEND"), new ConstantValuesExtractor("Frontend")),
+            Pair.of(new AttributeValueMatches(TEST_DETAILS, "Component", "Components.BACKEND"), new ConstantValuesExtractor("Backend"))),
             new ConstantValuesExtractor("dxCore")));
 
         Map<String, TestValuesExtractor> defaultFieldValues = new HashMap<>();
@@ -153,17 +155,17 @@ public final class TestCreatingConsumerExample {
         defaultFieldValues.put("Assignee", new ConstantValuesExtractor("%testImportLogin%"));
 
         Pair<String, TestValuesExtractor> xrayFieldLinkToTestAttribute =
-            Pair.of("Unique ID", new AttributeValuesExtractor("TestDetails", "uniqueID", ","));
+            Pair.of("Unique ID", new AttributeValuesExtractor(TEST_DETAILS, "uniqueID", ","));
 
-        XRayGenericTestsCreatingConsumer consumer = new XRayGenericTestsCreatingConsumer(
-            "Jira-Test-Creator",            // identifier
-            "QWERTY",                        // Jira project id
-            "Test",                         // Jira issue type for Test Case
-            summaryExtractor,               // A complex extractor to construct summary
-            fieldValuesExtractors,          // Field values extractors
-            defaultFieldValues,             // Default field values if not found in tests
-            true,                           // update existing XRay tests content or ignore changes
-            xrayFieldLinkToTestAttribute);  // mapping between autotests and XRay tests
-        return consumer;
+        return new XRayGenericTestsCreatingConsumer(
+                "Jira-Test-Creator",          // identifier
+                "QWERTY",                     // Jira project id
+                "Test",                       // Jira issue type for Test Case
+                summaryExtractor,             // A complex extractor to construct summary
+                fieldValuesExtractors,        // Field values extractors
+                defaultFieldValues,           // Default field values if not found in tests
+                true,                         // update existing XRay tests content or ignore changes
+                xrayFieldLinkToTestAttribute
+        );
     }
 }

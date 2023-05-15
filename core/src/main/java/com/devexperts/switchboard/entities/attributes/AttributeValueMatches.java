@@ -13,8 +13,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
  * An implementation of {@link AttributePredicate} which tests whether the {@link Attributes} has a value
- * matching the specified regex {@link valueRegex} with a value key  matching the specified regex {@link attributeValueKeyRegex}
- * and key matching the specified regex {@link attributeKeyRegex}
+ * matching the specified regex {@link #valueRegex} with a value key  matching the specified regex {@link #attributeValueKeyRegex}
+ * and key matching the specified regex {@link #attributeKeyRegex}
  */
 public class AttributeValueMatches implements AttributePredicate {
     @JsonProperty(required = true)

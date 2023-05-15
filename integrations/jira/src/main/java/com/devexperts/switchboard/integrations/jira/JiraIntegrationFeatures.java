@@ -64,7 +64,7 @@ public class JiraIntegrationFeatures implements IntegrationFeatures {
 
 
     /**
-     * Returns a the {@link IssueType} for the specified project with specified {@link IssueType#name}
+     * Returns a the {@link IssueType} for the specified project with specified {@link IssueType#getName()}
      *
      * @param projectKey    unique key of the Jira project
      * @param issueTypeName name of {@link IssueType} to search
@@ -91,7 +91,7 @@ public class JiraIntegrationFeatures implements IntegrationFeatures {
     }
 
     /**
-     * Returns a the {@link BasicComponent} for the specified project with specified {@link BasicComponent#name}
+     * Returns a the {@link BasicComponent} for the specified project with specified {@link BasicComponent#getName()}
      *
      * @param projectKey    unique key of the Jira project
      * @param componentName name of {@link BasicComponent} to search
@@ -162,7 +162,7 @@ public class JiraIntegrationFeatures implements IntegrationFeatures {
             return searchForIssues(jqlQuery, Integer.MAX_VALUE, 0, fields);
         }
         List<Issue> result = new ArrayList<>();
-        List<Issue> searchResult = new ArrayList<>();
+        List<Issue> searchResult;
         int i = 0;
         do {
             searchResult = searchForIssues(jqlQuery, searchQueryBatch, i, fields);

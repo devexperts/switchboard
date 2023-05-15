@@ -12,14 +12,15 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 /**
- * The interface indicating an an entity which as an identifier and can be (de)serialized by fasterxml.jackson
- * Uses default {@link JsonTypeInfo.As.PROPERTY} include for (de)serialization
+ * The interface indicating an entity which as an identifier and can be (de)serialized by fasterxml.jackson
+ * Uses default {@link JsonTypeInfo.As#PROPERTY} include for (de)serialization
  */
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS)
 public interface Identifiable {
     /**
      * The entity identifier, unique within functional unit
-     * (i.e. a TestSplitter in integration among other TestSplitters in this integration, an Integration among other integrations in run etc.)
+     * (i.e. a TestSplitter in integration among other TestSplitters in this integration,
+     * an Integration among other integrations in run etc.)
      *
      * @return String entity identifier
      */

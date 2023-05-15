@@ -17,12 +17,13 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.function.Function;
+import java.util.stream.Stream;
 
 public final class FileUtils {
     private FileUtils() {}
 
     /**
-     * Collects recursively paths to all files within specified {@link locations} matching specified regex {@link filePattern}
+     * Collects recursively paths to all files within specified {@code locations} matching specified regex {@code filePattern}
      *
      * @param filePattern pattern to check collected file match. The default format is glob; regex can be used starting format value from "regex:"
      * @param locations   collection of String locations to search
@@ -33,7 +34,7 @@ public final class FileUtils {
     }
 
     /**
-     * Collects recursively URLs to all files within specified {@link locations} matching specified regex {@link filePattern}
+     * Collects recursively URLs to all files within specified {@code locations} matching specified regex {@code filePattern}
      *
      * @param filePattern pattern to check collected file match. The default format is glob; regex can be used starting format value from "regex:"
      * @param locations   locations collection of String locations to search
@@ -44,7 +45,7 @@ public final class FileUtils {
     }
 
     /**
-     * Transforms the specified String path to URL
+     * Transforms the specified String path to {@link URL}
      *
      * @param path to transform
      * @return URL from specified path
@@ -54,7 +55,7 @@ public final class FileUtils {
     }
 
     /**
-     * Transforms the specified Path path to URL
+     * Transforms the specified {@link Path} to {@link URL}
      *
      * @param path to transform
      * @return URL from specified path
@@ -63,7 +64,7 @@ public final class FileUtils {
         try {
             return path.toUri().toURL();
         } catch (MalformedURLException e) {
-            throw new RuntimeException("Malformed libs path: " + path.toString(), e);
+            throw new RuntimeException("Malformed libs path: " + path, e);
         }
     }
 
@@ -72,11 +73,10 @@ public final class FileUtils {
         String syntaxAndPattern = filePattern.startsWith("regex:") || filePattern.startsWith("glob:") ?
                 filePattern : ("glob:" + filePattern);
         for (String location : locations) {
-            try {
-                Path path = Paths.get(location);
-                PathMatcher matcher = path.getFileSystem().getPathMatcher(syntaxAndPattern);
-                Files.walk(path.toAbsolutePath())
-                        .filter(Files::isRegularFile)
+            Path path = Paths.get(location);
+            PathMatcher matcher = path.getFileSystem().getPathMatcher(syntaxAndPattern);
+            try (Stream<Path> walk = Files.walk(path.toAbsolutePath())) {
+                walk.filter(Files::isRegularFile)
                         .filter(matcher::matches)
                         .distinct()
                         .map(converter)

@@ -13,7 +13,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
  * {@link AttributePredicate} which tests whether the {@link Attributes} has a single value
- * with key matching the specified regex {@link attributeKeyRegex} and value key matching the specified regex {@link attributeValueKeyRegex}
+ * with key matching the specified regex {@link #attributeKeyRegex} and value key matching the specified regex {@link #attributeValueKeyRegex}
  */
 public class AttributeHasSingleValue implements AttributePredicate {
     @JsonProperty(required = true)

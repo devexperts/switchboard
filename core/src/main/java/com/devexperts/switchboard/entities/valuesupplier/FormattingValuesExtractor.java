@@ -20,7 +20,7 @@ import java.util.stream.Collectors;
 
 /**
  * This implementation of {@link TestRunValuesExtractor} and {@link TestValuesExtractor}
- * creating a formatted String (see {@link String#format(String, Object...)})  based on {@link formatString}
+ * creating a formatted String (see {@link String#format(String, Object...)})  based on {@link #formatString}
  * and a list of other {@link TestRunValuesExtractor} and {@link TestValuesExtractor} initiated with the same Test/TestRun as arguments
  */
 public class FormattingValuesExtractor implements TestRunValuesExtractor, TestValuesExtractor {

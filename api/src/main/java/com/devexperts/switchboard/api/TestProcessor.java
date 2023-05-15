@@ -12,7 +12,7 @@ import com.devexperts.switchboard.entities.Test;
 import java.util.List;
 
 /**
- * A component processing (complementing, decoding, splitting etc) specified tests
+ * A component processing (complementing, decoding, splitting etc.) specified tests
  */
 public interface TestProcessor<F extends IntegrationFeatures> extends IntegrationComponent<F> {
 

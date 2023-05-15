@@ -46,7 +46,7 @@ public final class IntegrationContexts {
     /**
      * Returns the list of all integrations
      *
-     * @return full list of instantiated integrations integrations
+     * @return full list of instantiated integrations
      */
     public static List<Integration<?>> getIntegrations() {
         return Collections.unmodifiableList(new ArrayList<>(CONTEXTS.keySet()));

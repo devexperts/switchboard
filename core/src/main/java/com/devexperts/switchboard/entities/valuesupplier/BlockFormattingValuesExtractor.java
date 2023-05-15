@@ -24,8 +24,8 @@ import java.util.stream.Stream;
 
 /**
  * This implementation of {@link TestRunValuesExtractor} and {@link TestValuesExtractor}
- * creating a String consisted of specified blocks. Each block is specified by it's String header and ValuesExtractor providing block body
- * initiated with the same Test/TestRun as arguments.
+ * creating a String consisted of specified blocks. Each block is specified by its String header
+ * and ValuesExtractor providing block body initiated with the same Test/TestRun as arguments.
  */
 public class BlockFormattingValuesExtractor implements TestRunValuesExtractor, TestValuesExtractor {
     @JsonProperty(required = true)
@@ -37,11 +37,13 @@ public class BlockFormattingValuesExtractor implements TestRunValuesExtractor, T
     @JsonProperty(defaultValue = "false")
     private boolean showEmptyBlocks = false;
 
-    private BlockFormattingValuesExtractor() {}
+    private BlockFormattingValuesExtractor() {
+    }
 
-    public BlockFormattingValuesExtractor(List<Pair<String, ValuesExtractor>> blockExtractors, String headerSeparator, String blockSeparator,
-                                          boolean showEmptyBlocks)
-    {
+    public BlockFormattingValuesExtractor(List<Pair<String, ValuesExtractor>> blockExtractors,
+                                          String headerSeparator,
+                                          String blockSeparator,
+                                          boolean showEmptyBlocks) {
         this.blockExtractors = blockExtractors;
         this.headerSeparator = headerSeparator;
         this.blockSeparator = blockSeparator;
@@ -68,11 +70,11 @@ public class BlockFormattingValuesExtractor implements TestRunValuesExtractor, T
         return getValue(t, TestValuesExtractor.class, TestValuesExtractor::getTestValue);
     }
 
-    private <T, C extends ValuesExtractor> String getValue(T t, Class<C> extractorClass, BiFunction<C, T, String> extractoeFunction) {
+    private <T, C extends ValuesExtractor> String getValue(T t, Class<C> extractorClass, BiFunction<C, T, String> extractorFunction) {
         return blockExtractors.stream()
                 .map(p -> Pair.of(p.getKey(), getTypedSupplier(p.getValue(), extractorClass)))
                 .filter(e -> e.getValue() != null)
-                .map(e -> Pair.of(e.getKey(), extractoeFunction.apply(e.getValue(), t)))
+                .map(e -> Pair.of(e.getKey(), extractorFunction.apply(e.getValue(), t)))
                 .filter(e -> showEmptyBlocks || !isEffectivelyBlank(e.getValue()))
                 .map(e -> getJoiner(headerSeparator).apply(e))
                 .collect(Collectors.joining(blockSeparator));
@@ -90,7 +92,10 @@ public class BlockFormattingValuesExtractor implements TestRunValuesExtractor, T
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         BlockFormattingValuesExtractor that = (BlockFormattingValuesExtractor) o;
-        return showEmptyBlocks == that.showEmptyBlocks && Objects.equals(blockExtractors, that.blockExtractors) && Objects.equals(headerSeparator, that.headerSeparator) && Objects.equals(blockSeparator, that.blockSeparator);
+        return showEmptyBlocks == that.showEmptyBlocks
+                && Objects.equals(blockExtractors, that.blockExtractors)
+                && Objects.equals(headerSeparator, that.headerSeparator)
+                && Objects.equals(blockSeparator, that.blockSeparator);
     }
 
     @Override

@@ -10,6 +10,7 @@ package com.devexperts.switchboard.integrations.jira;
 import com.devexperts.switchboard.entities.Test;
 import com.devexperts.switchboard.impl.filters.DefaultTestFilter;
 import com.devexperts.switchboard.utils.Arguments;
+import com.devexperts.switchboard.entities.Attributes;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.slf4j.Logger;
@@ -23,8 +24,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * {@link com.devexperts.switchboard.api.TestFilter} implementation based a result of {@link jqlQuery} execution in Jira
- * matched by a specified {@link attributeKey} and {@link attributeValueKey} of {@link Attributes} of filtered Test
+ * {@link com.devexperts.switchboard.api.TestFilter} implementation based a result of {@link #jqlQuery} execution in Jira
+ * matched by a specified {@link #attributeKey} and {@link #attributeValueKey} of {@link Attributes} of filtered Test
  */
 public class JqlQueryTestFilter extends DefaultTestFilter<JiraIntegrationFeatures> {
     private static final Logger log = LoggerFactory.getLogger(JqlQueryTestFilter.class);

@@ -23,6 +23,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * Implementation of {@link TestSplitter} based on a single attribute value under specified key and attribute key
@@ -65,9 +66,10 @@ public class AttributeSingleValueSplitter<F extends IntegrationFeatures> impleme
         Iterator<Test> iterator = unsplit.iterator();
         while (iterator.hasNext()) {
             Test test = iterator.next();
-            if (predicate.test(test.getAttributes())) {
-                //noinspection OptionalGetWithoutIsPresent : checked by predicate
-                split.computeIfAbsent(test.getAttributes().getSingleAttributeValue(attributeKey, attributeValueKey).get(),
+            Attributes attributes = test.getAttributes();
+            Optional<String> singleAttributeValue = attributes.getSingleAttributeValue(attributeKey, attributeValueKey);
+            if (predicate.test(attributes) && singleAttributeValue.isPresent()) {
+                split.computeIfAbsent(singleAttributeValue.get(),
                         k -> new ArrayList<>()).add(test);
                 iterator.remove();
             }

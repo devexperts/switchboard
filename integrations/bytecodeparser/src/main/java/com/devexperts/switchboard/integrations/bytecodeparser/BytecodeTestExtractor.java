@@ -10,6 +10,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.reflect.ClassPath;
 
 import java.io.File;
+import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -49,8 +50,7 @@ public class BytecodeTestExtractor extends FileTestExtractor<BytecodeParserInteg
     }
 
     public BytecodeTestExtractor(String identifier, List<String> testLocation, String filePattern, String testAnnotationPattern,
-                                 boolean storeAnnotationsQualified)
-    {
+                                 boolean storeAnnotationsQualified) {
         super(identifier, testLocation);
         this.filePattern = filePattern;
         this.testAnnotationPattern = testAnnotationPattern;
@@ -72,28 +72,30 @@ public class BytecodeTestExtractor extends FileTestExtractor<BytecodeParserInteg
     @Override
     protected List<Test> extractTests(File file) {
         Pattern pattern = Pattern.compile(testAnnotationPattern);
-        URLClassLoader fullClassLoader = new URLClassLoader(new URL[] {sneak().get(() -> file.toURI().toURL())}, Thread.currentThread().getContextClassLoader());
-        ImmutableSet<ClassPath.ClassInfo> allClasses = integrationFeatures.parse(file);
-        List<Test> collect = allClasses.stream()
-                .map(c -> sneak().get(() -> fullClassLoader.loadClass(c.getName())))
-                .flatMap(c -> Arrays.stream(c.getDeclaredMethods()))
-                .filter(m -> Arrays.stream(m.getAnnotations()).anyMatch(a -> pattern.matcher(storeAnnotationsQualified ? a.annotationType().getName() : a.annotationType().getSimpleName()).matches())
-                ).map(m -> {
-                    Attributes attributes = classAttributesCache.computeIfAbsent(m.getDeclaringClass(), c ->
-                            Attributes.newBuilder()
-                                    .putAttributes(parseAnnotationAttributes(c.getAnnotations()))
-                                    .build())
-                            .toBuilder()
-                            .putAttributes(parseAnnotationAttributes(m.getAnnotations()))
-                            .putAttribute(Attributes.LOCATION_PROP, BytecodeParserIntegrationFeatures.LOCATION_PACKAGE_KEY, m.getDeclaringClass().getPackage().getName())
-                            .mergeAttribute(Attributes.LOCATION_PROP, BytecodeParserIntegrationFeatures.LOCATION_CLASS_KEY, m.getDeclaringClass().getSimpleName())
-                            .mergeAttribute(Attributes.LOCATION_PROP, BytecodeParserIntegrationFeatures.LOCATION_METHOD_KEY, m.getName())
-                            .build();
-                    return new Test(BytecodeParserIntegrationFeatures.formatTestPath(attributes), attributes, BytecodeParserIntegrationFeatures.TEST_TO_RUNNABLE_STRING);
-                })
-                .collect(Collectors.toList());
-        return collect;
-
+        URL[] urls = {sneak().get(() -> file.toURI().toURL())};
+        try (URLClassLoader fullClassLoader = new URLClassLoader(urls, Thread.currentThread().getContextClassLoader())) {
+            ImmutableSet<ClassPath.ClassInfo> allClasses = integrationFeatures.parse(file);
+            return allClasses.stream()
+                    .map(c -> sneak().get(() -> fullClassLoader.loadClass(c.getName())))
+                    .flatMap(c -> Arrays.stream(c.getDeclaredMethods()))
+                    .filter(m -> Arrays.stream(m.getAnnotations()).anyMatch(a -> pattern.matcher(storeAnnotationsQualified ? a.annotationType().getName() : a.annotationType().getSimpleName()).matches()))
+                    .map(m -> {
+                        Attributes attributes = classAttributesCache.computeIfAbsent(m.getDeclaringClass(), c ->
+                                        Attributes.newBuilder()
+                                                .putAttributes(parseAnnotationAttributes(c.getAnnotations()))
+                                                .build())
+                                .toBuilder()
+                                .putAttributes(parseAnnotationAttributes(m.getAnnotations()))
+                                .putAttribute(Attributes.LOCATION_PROP, BytecodeParserIntegrationFeatures.LOCATION_PACKAGE_KEY, m.getDeclaringClass().getPackage().getName())
+                                .mergeAttribute(Attributes.LOCATION_PROP, BytecodeParserIntegrationFeatures.LOCATION_CLASS_KEY, m.getDeclaringClass().getSimpleName())
+                                .mergeAttribute(Attributes.LOCATION_PROP, BytecodeParserIntegrationFeatures.LOCATION_METHOD_KEY, m.getName())
+                                .build();
+                        return new Test(BytecodeParserIntegrationFeatures.formatTestPath(attributes), attributes, BytecodeParserIntegrationFeatures.TEST_TO_RUNNABLE_STRING);
+                    }).collect(Collectors.toList());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return Collections.emptyList();
     }
 
     private Map<String, Map<String, Set<String>>> parseAnnotationAttributes(Annotation[] annotations) {
@@ -114,12 +116,11 @@ public class BytecodeTestExtractor extends FileTestExtractor<BytecodeParserInteg
                 return null;
             }
             String name = "value".equals(m.getName()) ? "" : m.getName();
-            Pair<String, Set<String>> of =
-                    Pair.of(name, o != null && o.getClass().isArray() ? Arrays.stream((Object[]) o)
-                            .map(Objects::toString)
-                            .collect(Collectors.toSet())
-                            : Collections.singleton(Objects.toString(o)));
-            return of;
+            Set<String> stringSet = (o != null && o.getClass().isArray()) ? Arrays.stream((Object[]) o)
+                    .map(Objects::toString)
+                    .collect(Collectors.toSet())
+                    : Collections.singleton(Objects.toString(o));
+            return Pair.of(name, stringSet);
         } catch (IllegalAccessException | InvocationTargetException e) {
             return null;
         }

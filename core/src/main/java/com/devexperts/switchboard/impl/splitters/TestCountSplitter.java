@@ -23,8 +23,8 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
- * Implementation of {@link TestSplitter} based on a maximum test count in TestRun specified in {@link count}
- * If {@link count} is set < 1 no splitting is performed and a TestRun with a copy of initial Test list is returned
+ * Implementation of {@link TestSplitter} based on a maximum test count in TestRun specified in {@link #count}
+ * If {@link #count} is set < 1 no splitting is performed and a TestRun with a copy of initial Test list is returned
  */
 public class TestCountSplitter<F extends IntegrationFeatures> implements TestSplitter<F> {
     @JsonProperty(required = true)
@@ -76,11 +76,9 @@ public class TestCountSplitter<F extends IntegrationFeatures> implements TestSpl
     private <T> List<Set<T>> doSplit(List<T> tests) {
         List<Set<T>> result = new ArrayList<>();
 
-        for (int i = 0; i < tests.size(); ) {
-            int start = i;
+        for (int i = 0; i < tests.size(); i = i + count) {
             int end = Math.min(i + count, tests.size());
-            result.add(new HashSet<>(tests.subList(start, end)));
-            i = end;
+            result.add(new HashSet<>(tests.subList(i, end)));
         }
         return result;
     }

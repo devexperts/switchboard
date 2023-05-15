@@ -17,7 +17,7 @@ import java.util.Objects;
 import java.util.Set;
 
 /**
- * This implementation of {@link ValuesExtractor} stores and returns a constant value independent from initialization
+ * This implementation of {@link ValuesExtractor} stores and returns a constant value independent of initialization
  */
 public class ConstantValuesExtractor implements TestRunValuesExtractor, TestValuesExtractor {
     @JsonProperty(required = true)

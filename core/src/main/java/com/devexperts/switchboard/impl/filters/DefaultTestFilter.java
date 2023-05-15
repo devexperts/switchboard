@@ -32,7 +32,7 @@ public abstract class DefaultTestFilter<F extends IntegrationFeatures> implement
     /**
      * Evaluates this filter on the specified test.
      *
-     * @param test        test to check
+     * @param test test to check
      * @return true if test matches specified filter attributes
      */
     protected abstract boolean matches(Test test);

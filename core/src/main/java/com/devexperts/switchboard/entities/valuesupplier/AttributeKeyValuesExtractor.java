@@ -19,7 +19,7 @@ import java.util.stream.Collectors;
 
 /**
  * This implementation of {@link ValuesExtractor} can be initiated by both {@link Test} and {@link TestRun}
- * for extracting from {@link Attributes} a TestAttribute key matching specified {@link attributeKeyRegex}
+ * for extracting from {@link Attributes} a TestAttribute key matching specified {@link #attributeKeyRegex}
  */
 public class AttributeKeyValuesExtractor implements TestRunValuesExtractor, TestValuesExtractor {
     @JsonProperty(required = true)

@@ -22,7 +22,7 @@ public final class Arguments {
      * @param t       object to check
      * @param argName name for exception
      * @param <T>     object class
-     * @return the initial object if it is not not null
+     * @return the initial object if it is not null
      * @throws IllegalArgumentException if object is null
      */
     public static <T> T checkNotNull(T t, String argName) {
@@ -33,7 +33,7 @@ public final class Arguments {
     }
 
     /**
-     * Checks that the specified String is not null and nut blank
+     * Checks that the specified String is not null and not blank
      *
      * @param s       string to check
      * @param argName name for exception
