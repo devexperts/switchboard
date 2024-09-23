@@ -9,33 +9,28 @@ package com.devexperts.switchboard.integrations.jira;
 
 import com.atlassian.httpclient.apache.httpcomponents.DefaultHttpClientFactory;
 import com.atlassian.httpclient.api.HttpClient;
+import com.atlassian.httpclient.api.Response;
 import com.atlassian.httpclient.api.factory.HttpClientOptions;
 import com.atlassian.jira.rest.client.api.AuthenticationHandler;
-import com.atlassian.jira.rest.client.api.GetCreateIssueMetadataOptionsBuilder;
 import com.atlassian.jira.rest.client.api.JiraRestClient;
-import com.atlassian.jira.rest.client.api.domain.BasicComponent;
-import com.atlassian.jira.rest.client.api.domain.BasicIssue;
-import com.atlassian.jira.rest.client.api.domain.CimIssueType;
-import com.atlassian.jira.rest.client.api.domain.CimProject;
-import com.atlassian.jira.rest.client.api.domain.Issue;
-import com.atlassian.jira.rest.client.api.domain.IssueType;
-import com.atlassian.jira.rest.client.api.domain.Project;
-import com.atlassian.jira.rest.client.api.domain.User;
+import com.atlassian.jira.rest.client.api.domain.*;
 import com.atlassian.jira.rest.client.auth.BasicHttpAuthenticationHandler;
 import com.atlassian.jira.rest.client.internal.async.AsynchronousJiraRestClient;
 import com.atlassian.jira.rest.client.internal.async.AtlassianHttpClientDecorator;
 import com.atlassian.jira.rest.client.internal.async.DisposableHttpClient;
+import com.atlassian.jira.rest.client.internal.json.CimFieldsInfoJsonParser;
+import com.atlassian.jira.rest.client.internal.json.GenericJsonArrayParser;
+import com.atlassian.jira.rest.client.internal.json.IssueTypeJsonParser;
+import com.atlassian.jira.rest.client.internal.json.PageJsonParser;
 import com.devexperts.switchboard.api.IntegrationFeatures;
+import org.codehaus.jettison.json.JSONArray;
+import org.codehaus.jettison.json.JSONException;
+import org.codehaus.jettison.json.JSONObject;
 
 import java.net.URI;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
@@ -50,16 +45,21 @@ public class JiraIntegrationFeatures implements IntegrationFeatures {
     private final Map<String, Project> projectCache = new HashMap<>();
     private final Map<String, CimProject> cimProjectCache = new HashMap<>();
     private final Map<String, Map<String, CimIssueType>> projectIssueTypeCache = new HashMap<>();
+    private final URI serverUri;
     private final Map<String, User> usersCache = new HashMap<>();
 
     private final int socketTimeoutSeconds;
     private final int searchQueryBatch;
 
+    private final DisposableHttpClient httpClient;
+
     JiraIntegrationFeatures(URI serverUri, String username, String password, int socketTimeoutSeconds, int searchQueryBatch) {
+        this.serverUri = serverUri;
         this.socketTimeoutSeconds = socketTimeoutSeconds;
         this.searchQueryBatch = searchQueryBatch;
         this.authenticationHandler = new BasicHttpAuthenticationHandler(username, password);
-        this.jiraClient = new AsynchronousJiraRestClient(serverUri, getHttpClient(serverUri, authenticationHandler));
+        this.httpClient = getHttpClient(serverUri, authenticationHandler);
+        this.jiraClient = new AsynchronousJiraRestClient(serverUri, httpClient);
     }
 
 
@@ -72,22 +72,51 @@ public class JiraIntegrationFeatures implements IntegrationFeatures {
      */
     public CimIssueType getIssueType(String projectKey, String issueTypeName) {
         return projectIssueTypeCache.computeIfAbsent(projectKey, k -> new HashMap<>())
-            .computeIfAbsent(issueTypeName,
-                i -> StreamSupport.stream(getCimProject(projectKey).getIssueTypes().spliterator(), false)
-                    .filter(t -> Objects.equals(i, t.getName()))
-                    .findFirst()
-                    .orElseThrow(() -> new IllegalStateException(
-                        String.format("IssueType '%s' not found in project '%s'", issueTypeName, projectKey))));
+                .computeIfAbsent(issueTypeName,
+                        i -> getIssueTypes(projectKey).stream()
+                                .filter(t -> Objects.equals(i, t.getName()))
+                                .findFirst()
+                                .orElseThrow(() -> new IllegalStateException(
+                                        String.format("IssueType '%s' not found in project '%s'", issueTypeName, projectKey))));
     }
 
-    private CimProject getCimProject(String projectKey) {
-        return cimProjectCache.computeIfAbsent(projectKey,
-            k -> StreamSupport.stream(jiraClient.getIssueClient().getCreateIssueMetadata(new GetCreateIssueMetadataOptionsBuilder()
-                    .withExpandedIssueTypesFields()
-                    .withProjectKeys(k)
-                    .build()).claim().spliterator(), false)
-                .findFirst()
-                .orElseThrow(() -> new IllegalStateException(String.format("Project '%s' not found", projectKey))));
+    private final GenericJsonArrayParser<IssueType> issueTypesParser = GenericJsonArrayParser.create(new IssueTypeJsonParser());
+    private final GenericJsonArrayParser<CimFieldInfo> CIM_ISSUE_TYPE_JSON_PARSER = GenericJsonArrayParser.create(new CimFieldsInfoJsonParser());
+
+
+    private List<CimIssueType> getIssueTypes(String projectKey) {
+        // calling the Jira REST API directly as JIRA v. 9.x dropped support for createmeta endpoint (https://confluence.atlassian.com/jiracore/preparing-for-jira-9-0-1115661092.html)
+        try {
+            String uri = serverUri + "/rest/api/2/issue/createmeta/" + projectKey + "/issuetypes/";
+            Response issueTypes = httpClient.newRequest(uri).get().get();
+            PageJsonParser<IssueType> pages = new PageJsonParser<>(issueTypesParser);
+            Page<IssueType> values = pages.parse(new JSONObject(issueTypes.getEntity()));
+            return StreamSupport.stream(values.getValues().spliterator(), false).map(i -> {
+                try {
+                    Response cimIssueTypeRaw = httpClient.newRequest(uri + i.getId()).get().get();
+                    PageJsonParser<CimFieldInfo> cimPages = new PageJsonParser<>(CIM_ISSUE_TYPE_JSON_PARSER);
+                    JSONObject json = new JSONObject(cimIssueTypeRaw.getEntity());
+                    Page<CimFieldInfo> cimValues = cimPages.parse(json);
+                    AtomicInteger index = new AtomicInteger(0);
+                    JSONArray array = json.getJSONArray("values");
+                    Map<String, CimFieldInfo> fields = StreamSupport.stream(cimValues.getValues().spliterator(), false).map(c -> {
+                        // taking the fieldId directly from JSON as it is not bound to the CimFieldInfo object
+                        try {
+                            String id = ((JSONObject) array.get(index.getAndIncrement())).get("fieldId").toString();
+                            return new CimFieldInfo(id, c.isRequired(), c.getName(), c.getSchema(), c.getOperations(), c.getAllowedValues(), c.getAutoCompleteUri());
+                        } catch (JSONException e) {
+                            throw new RuntimeException(e);
+                        }
+                    }).collect(Collectors.toMap(CimFieldInfo::getName, f -> f));
+
+                    return new CimIssueType(i.getIconUri(), i.getId(), i.getName(), i.isSubtask(), i.getDescription(), i.getIconUri(), fields);
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+            }).collect(Collectors.toList());
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
     /**
@@ -99,13 +128,13 @@ public class JiraIntegrationFeatures implements IntegrationFeatures {
      */
     public BasicComponent getComponent(String projectKey, String componentName) {
         return StreamSupport.stream(projectCache.computeIfAbsent(projectKey,
-                    p -> jiraClient.getProjectClient().getProject(p).claim())
-                .getComponents()
-                .spliterator(), false)
-            .filter(i -> Objects.equals(i.getName(), componentName))
-            .findFirst()
-            .orElseThrow(
-                () -> new IllegalStateException(String.format("Component '%s' not found in project '%s'", componentName, projectKey)));
+                                p -> jiraClient.getProjectClient().getProject(p).claim())
+                        .getComponents()
+                        .spliterator(), false)
+                .filter(i -> Objects.equals(i.getName(), componentName))
+                .findFirst()
+                .orElseThrow(
+                        () -> new IllegalStateException(String.format("Component '%s' not found in project '%s'", componentName, projectKey)));
     }
 
     /**
@@ -137,8 +166,8 @@ public class JiraIntegrationFeatures implements IntegrationFeatures {
      */
     public List<String> searchForIssueKeys(String jqlQuery) {
         return searchForIssues(jqlQuery, Collections.emptySet())
-            .stream().map(BasicIssue::getKey)
-            .collect(Collectors.toList());
+                .stream().map(BasicIssue::getKey)
+                .collect(Collectors.toList());
     }
 
     /**
@@ -175,11 +204,11 @@ public class JiraIntegrationFeatures implements IntegrationFeatures {
     private List<Issue> searchForIssues(String jqlQuery, Integer limit, Integer startAt, Set<String> fields) {
         try {
             return StreamSupport.stream(jiraClient.getSearchClient()
-                    .searchJql(jqlQuery, limit, startAt, fields)
-                    .claim()
-                    .getIssues()
-                    .spliterator(), false)
-                .collect(Collectors.toList());
+                            .searchJql(jqlQuery, limit, startAt, fields)
+                            .claim()
+                            .getIssues()
+                            .spliterator(), false)
+                    .collect(Collectors.toList());
         } catch (Exception e) {
             throw new RuntimeException(String.format("Failed to execute query '%s'", jqlQuery), e);
         }
