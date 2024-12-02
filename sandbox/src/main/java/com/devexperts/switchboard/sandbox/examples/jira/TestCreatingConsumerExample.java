@@ -157,15 +157,17 @@ public final class TestCreatingConsumerExample {
         Pair<String, TestValuesExtractor> xrayFieldLinkToTestAttribute =
             Pair.of("Unique ID", new AttributeValuesExtractor(TEST_DETAILS, "uniqueID", ","));
 
-        return new XRayGenericTestsCreatingConsumer(
-                "Jira-Test-Creator",          // identifier
-                "QWERTY",                     // Jira project id
-                "Test",                       // Jira issue type for Test Case
-                summaryExtractor,             // A complex extractor to construct summary
-                fieldValuesExtractors,        // Field values extractors
-                defaultFieldValues,           // Default field values if not found in tests
-                true,                         // update existing XRay tests content or ignore changes
-                xrayFieldLinkToTestAttribute
+        XRayGenericTestsCreatingConsumer consumer = new XRayGenericTestsCreatingConsumer(
+            "Jira-Test-Creator",            // identifier
+            "QWERTY",                        // Jira project id
+            "Test",                         // Jira issue type for Test Case
+            summaryExtractor,               // A complex extractor to construct summary
+            fieldValuesExtractors,          // Field values extractors
+            defaultFieldValues,             // Default field values if not found in tests
+            xrayFieldLinkToTestAttribute,   // mapping between autotests and XRay tests
+            true,                           // update existing XRay tests content or ignore changes
+            true                            // use failSafeStrategy strategy
         );
+        return consumer;
     }
 }

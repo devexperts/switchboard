@@ -37,8 +37,7 @@ public class BlockFormattingValuesExtractor implements TestRunValuesExtractor, T
     @JsonProperty(defaultValue = "false")
     private boolean showEmptyBlocks = false;
 
-    private BlockFormattingValuesExtractor() {
-    }
+    private BlockFormattingValuesExtractor() {}
 
     public BlockFormattingValuesExtractor(List<Pair<String, ValuesExtractor>> blockExtractors,
                                           String headerSeparator,

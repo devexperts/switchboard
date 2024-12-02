@@ -83,7 +83,9 @@ public abstract class FileTestExtractor<F extends IntegrationFeatures> implement
                 .flatMap(Collection::stream)
                 .collect(Collectors.toList());
         log.info("Extracted {} tests from {} files in {} millis", tests.size(), paths.size(), System.currentTimeMillis() - start);
-        log.trace("Extracted tests: {}\n\t", tests.stream().map(Test::getIdentifier).collect(Collectors.joining("\n\t")));
+        if (log.isTraceEnabled()) {
+            log.trace("Extracted tests: {}\n\t", tests.stream().map(Test::getIdentifier).collect(Collectors.joining("\n\t")));
+        }
         return tests;
     }
 }

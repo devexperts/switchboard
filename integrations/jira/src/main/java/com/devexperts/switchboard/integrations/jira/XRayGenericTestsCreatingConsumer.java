@@ -54,7 +54,7 @@ import java.util.stream.StreamSupport;
  * exists for each test in TestSet and creating a new one if it does not exist
  */
 public class XRayGenericTestsCreatingConsumer implements TestRunConsumer<JiraIntegrationFeatures> {
-    private enum ProcessingStatus {CREATED, UPDATED, INPUT_DUPLICATE, JIRA_DUPLICATE, UPDATE_PROHIBITED}
+    private enum ProcessingStatus {CREATED, UPDATED, INPUT_DUPLICATE, JIRA_DUPLICATE, UPDATE_PROHIBITED, CREATE_FAILURE, UPDATE_FAILURE}
 
     private static final Logger log = LoggerFactory.getLogger(XRayGenericTestsCreatingConsumer.class);
     private static final String GENERIC_TEST_DEFINITION_FIELD = "Generic Test Definition";
@@ -74,10 +74,12 @@ public class XRayGenericTestsCreatingConsumer implements TestRunConsumer<JiraInt
     private Map<String, TestValuesExtractor> fieldValuesExtractors;
     @JsonProperty(defaultValue = "[:]")
     private Map<String, TestValuesExtractor> defaultFieldValues = new HashMap<>();
-    @JsonProperty(defaultValue = "true")
-    private boolean updateExisting = true;
     @JsonProperty
     private Pair<String, TestValuesExtractor> xrayFieldLinkToTestAttribute = null;
+    @JsonProperty(defaultValue = "true")
+    private boolean updateExisting = true;
+    @JsonProperty(defaultValue = "true")
+    private boolean failSafeStrategy = true;
 
     @JsonIgnore
     private final List<Issue> existing = new ArrayList<>();
@@ -95,15 +97,17 @@ public class XRayGenericTestsCreatingConsumer implements TestRunConsumer<JiraInt
 
     public XRayGenericTestsCreatingConsumer(String identifier, String project, String issueTypeName, TestValuesExtractor summarySupplier,
                                             Map<String, TestValuesExtractor> fieldValuesExtractors, Map<String, TestValuesExtractor> defaultFieldValues,
-                                            boolean updateExisting, Pair<String, TestValuesExtractor> xrayFieldLinkToTestAttribute) {
+                                            Pair<String, TestValuesExtractor> xrayFieldLinkToTestAttribute, boolean updateExisting, boolean failSafeStrategy)
+    {
         this.identifier = identifier;
         this.project = project;
         this.issueTypeName = issueTypeName;
         this.summarySupplier = summarySupplier;
         this.fieldValuesExtractors = fieldValuesExtractors;
         this.defaultFieldValues = defaultFieldValues;
-        this.updateExisting = updateExisting;
         this.xrayFieldLinkToTestAttribute = xrayFieldLinkToTestAttribute;
+        this.updateExisting = updateExisting;
+        this.failSafeStrategy = failSafeStrategy;
     }
 
     @Override
@@ -133,25 +137,7 @@ public class XRayGenericTestsCreatingConsumer implements TestRunConsumer<JiraInt
     @Override
     public Void accept(List<TestRun> testRuns) {
         Map<ProcessingStatus, List<IssueInput>> result = doAccept(testRuns);
-        StringBuilder sb = new StringBuilder(String.format("Processed %s tests. Execution result:",
-                result.values().stream().mapToInt(List::size).sum()))
-                .append(String.format("\r\n\t\t- created %s XRay issues",
-                        result.getOrDefault(ProcessingStatus.CREATED, new ArrayList<>()).size()))
-                .append(String.format("\r\n\t\t- updated %s XRay issues",
-                        result.getOrDefault(ProcessingStatus.UPDATED, new ArrayList<>()).size()));
-        if (result.containsKey(ProcessingStatus.INPUT_DUPLICATE)) {
-            sb.append(String.format("\r\n\t\t- %s tests not processed due to key duplication between supplied tests",
-                    result.get(ProcessingStatus.INPUT_DUPLICATE).size()));
-        }
-        if (result.containsKey(ProcessingStatus.JIRA_DUPLICATE)) {
-            sb.append(String.format("\r\n\t\t- %s tests not processed due to key duplication in Jira",
-                    result.get(ProcessingStatus.JIRA_DUPLICATE).size()));
-        }
-        if (result.containsKey(ProcessingStatus.UPDATE_PROHIBITED)) {
-            sb.append(String.format("\r\n\t\t- %s tests not processed due update not allowed",
-                    result.get(ProcessingStatus.UPDATE_PROHIBITED).size()));
-        }
-        log.info(sb.toString());
+        log.info(describeResult(result));
         return null;
     }
 
@@ -185,27 +171,47 @@ public class XRayGenericTestsCreatingConsumer implements TestRunConsumer<JiraInt
                                 }))
                         .collect(Collectors.toList());
                 IssueInput input = createInput(test);
+                String testDesc = describeTestLink(testDefinition, testMappingVal);
                 if (linked.isEmpty()) {
-                    BasicIssue created = features.createIssue(input);
-                    log.debug("Created test {}: {}", describeTestLink(testDefinition, testMappingVal), created.getKey());
-                    result.computeIfAbsent(ProcessingStatus.CREATED, k -> new ArrayList<>()).add(input);
+                    try {
+                        BasicIssue created = features.createIssue(input);
+                        log.debug("Created test {}: {}", testDesc, created.getKey());
+                        result.computeIfAbsent(ProcessingStatus.CREATED, k -> new ArrayList<>()).add(input);
+                    } catch (Exception e) {
+                        String failMsg = String.format("Failed to create test %s", testDesc);
+                        if (failSafeStrategy) {
+                            log.error("{}{}", failMsg, collectCauseMessages(e));
+                            log.debug(failMsg, e);
+                            result.computeIfAbsent(ProcessingStatus.CREATE_FAILURE, k -> new ArrayList<>()).add(input);
+                        } else {
+                            throw new RuntimeException(failMsg, e);
+                        }
+                    }
                 } else if (updateExisting) {
                     if (linked.size() == 1) {
                         Issue singleFound = linked.get(0);
-                        features.updateIssue(singleFound.getKey(), input);
-                        log.debug("Updated existing test {}: {}", describeTestLink(testDefinition, testMappingVal), singleFound.getKey());
-                        result.computeIfAbsent(ProcessingStatus.UPDATED, k -> new ArrayList<>()).add(input);
+                        try {
+                            features.updateIssue(singleFound.getKey(), input);
+                            log.debug("Updated existing test {}: {}", testDesc, singleFound.getKey());
+                            result.computeIfAbsent(ProcessingStatus.UPDATED, k -> new ArrayList<>()).add(input);
+                        } catch (Exception e) {
+                            String failMsg = String.format("Failed to update issue %s %s", singleFound.getKey(), testDesc);
+                            if (failSafeStrategy) {
+                                log.error("{}{}", failMsg, collectCauseMessages(e));
+                                log.debug(failMsg, e);
+                                result.computeIfAbsent(ProcessingStatus.UPDATE_FAILURE, k -> new ArrayList<>()).add(input);
+                            } else {
+                                throw new RuntimeException(failMsg, e);
+                            }
+                        }
                     } else {
                         log.warn("Cannot update existing Jira issues: multiple match. Found {} issues {}: {}",
-                                linked.size(), describeTestLink(testDefinition, testMappingVal),
-                                linked.stream().map(BasicIssue::getKey).collect(Collectors.joining(", ")));
+                                linked.size(), testDesc, linked.stream().map(BasicIssue::getKey).collect(Collectors.joining(", ")));
                         result.computeIfAbsent(ProcessingStatus.JIRA_DUPLICATE, k -> new ArrayList<>()).add(input);
                     }
                 } else {
-                    log.warn("Found {} issues {}: {}", linked.size(), describeTestLink(testDefinition, testMappingVal),
-                            linked.stream()
-                                    .map(BasicIssue::getKey)
-                                    .collect(Collectors.joining(", ")));
+                    log.warn("Found {} issues {}: {}", linked.size(), testDesc,
+                            linked.stream().map(BasicIssue::getKey).collect(Collectors.joining(", ")));
                     result.computeIfAbsent(ProcessingStatus.UPDATE_PROHIBITED, k -> new ArrayList<>()).add(input);
                 }
             }
@@ -222,6 +228,58 @@ public class XRayGenericTestsCreatingConsumer implements TestRunConsumer<JiraInt
 
     private String describeTestLink(String testDefinition, String testMappingVal) {
         return String.format("linked to %s by '%s'='%s'", testDefinition, xrayMappingKey, testMappingVal);
+    }
+
+    private static String describeResult(Map<ProcessingStatus, List<IssueInput>> result) {
+        StringBuilder sb = new StringBuilder(String.format("Processed %s tests. Execution result:",
+                result.values().stream().mapToInt(List::size).sum()))
+                .append(String.format("\r\n\t\t- %s tests created successfully",
+                        result.getOrDefault(ProcessingStatus.CREATED, new ArrayList<>()).size()))
+                .append(String.format("\r\n\t\t- %s tests updated successfully",
+                        result.getOrDefault(ProcessingStatus.UPDATED, new ArrayList<>()).size()));
+        if (result.containsKey(ProcessingStatus.INPUT_DUPLICATE)) {
+            sb.append(String.format("\r\n\t\t- %s tests not processed due to key duplication between supplied tests",
+                    result.get(ProcessingStatus.INPUT_DUPLICATE).size()));
+        }
+        if (result.containsKey(ProcessingStatus.JIRA_DUPLICATE)) {
+            sb.append(String.format("\r\n\t\t- %s tests not processed due to key duplication in Jira",
+                    result.get(ProcessingStatus.JIRA_DUPLICATE).size()));
+        }
+        if (result.containsKey(ProcessingStatus.UPDATE_PROHIBITED)) {
+            sb.append(String.format("\r\n\t\t- %s tests not processed due update not allowed",
+                    result.get(ProcessingStatus.UPDATE_PROHIBITED).size()));
+        }
+        if (result.containsKey(ProcessingStatus.CREATE_FAILURE)) {
+            sb.append(String.format("\r\n\t\t- %s tests creation failed",
+                    result.get(ProcessingStatus.CREATE_FAILURE).size()));
+        }
+        if (result.containsKey(ProcessingStatus.UPDATE_FAILURE)) {
+            sb.append(String.format("\r\n\t\t- %s tests update failed",
+                    result.get(ProcessingStatus.UPDATE_FAILURE).size()));
+        }
+
+        return sb.toString();
+    }
+
+    private static String collectCauseMessages(Exception e) {
+        StringBuilder sb = new StringBuilder();
+        Throwable cause = e;
+        int depth = 1;
+        String prevCauseMsg = "";
+        while (cause != null) {
+            String causeMsg = cause.getMessage();
+            if (!prevCauseMsg.equals(causeMsg)) {
+                sb.append(":\n");
+                for (int i = 0; i < depth; i++) {
+                    sb.append("\t");
+                }
+                sb.append(causeMsg);
+                depth++;
+            }
+            cause = cause.getCause();
+            prevCauseMsg = causeMsg;
+        }
+        return sb.toString();
     }
 
     private IssueInput createInput(Test test) {
