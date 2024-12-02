@@ -30,6 +30,10 @@ public class JiraIntegration extends IntegrationImpl<JiraIntegration, JiraIntegr
     private int socketTimeoutSeconds = 60;
     @JsonProperty(defaultValue = "100")
     private int searchQueryBatch = 100;
+    @JsonProperty(defaultValue = "-1")
+    private int requestsLimitCount = -1;
+    @JsonProperty(defaultValue = "-1")
+    private int requestsLimitPeriodSeconds = -1;
 
     private JiraIntegrationFeatures features;
 
@@ -51,7 +55,7 @@ public class JiraIntegration extends IntegrationImpl<JiraIntegration, JiraIntegr
                     new URI(Arguments.checkNotNull(uri, "Jira server URI is not specified")),
                     Arguments.checkNotBlank(login, "Jira user login is not specified"),
                     Arguments.checkNotBlank(password, "Jira user password is not specified"),
-                    socketTimeoutSeconds, searchQueryBatch);
+                    socketTimeoutSeconds, searchQueryBatch, requestsLimitCount, requestsLimitPeriodSeconds);
         } catch (URISyntaxException e) {
             throw new RuntimeException("Incorrect URI syntax: " + uri, e);
         }

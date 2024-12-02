@@ -13,7 +13,17 @@ import com.atlassian.httpclient.api.Response;
 import com.atlassian.httpclient.api.factory.HttpClientOptions;
 import com.atlassian.jira.rest.client.api.AuthenticationHandler;
 import com.atlassian.jira.rest.client.api.JiraRestClient;
-import com.atlassian.jira.rest.client.api.domain.*;
+import com.atlassian.jira.rest.client.api.RestClientException;
+import com.atlassian.jira.rest.client.api.domain.BasicComponent;
+import com.atlassian.jira.rest.client.api.domain.BasicIssue;
+import com.atlassian.jira.rest.client.api.domain.CimFieldInfo;
+import com.atlassian.jira.rest.client.api.domain.CimIssueType;
+import com.atlassian.jira.rest.client.api.domain.Issue;
+import com.atlassian.jira.rest.client.api.domain.IssueType;
+import com.atlassian.jira.rest.client.api.domain.Page;
+import com.atlassian.jira.rest.client.api.domain.Project;
+import com.atlassian.jira.rest.client.api.domain.User;
+import com.atlassian.jira.rest.client.api.domain.input.IssueInput;
 import com.atlassian.jira.rest.client.auth.BasicHttpAuthenticationHandler;
 import com.atlassian.jira.rest.client.internal.async.AsynchronousJiraRestClient;
 import com.atlassian.jira.rest.client.internal.async.AtlassianHttpClientDecorator;
@@ -28,9 +38,17 @@ import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
 
 import java.net.URI;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
@@ -39,27 +57,30 @@ import java.util.stream.StreamSupport;
  */
 public class JiraIntegrationFeatures implements IntegrationFeatures {
 
-    private final AuthenticationHandler authenticationHandler;
-    final JiraRestClient jiraClient;
+    private final JiraRestClient jiraClient;
 
     private final Map<String, Project> projectCache = new HashMap<>();
-    private final Map<String, CimProject> cimProjectCache = new HashMap<>();
     private final Map<String, Map<String, CimIssueType>> projectIssueTypeCache = new HashMap<>();
-    private final URI serverUri;
     private final Map<String, User> usersCache = new HashMap<>();
-
+    private final URI serverUri;
     private final int socketTimeoutSeconds;
     private final int searchQueryBatch;
+    private final int requestsLimitCount;
+    private final long requestsLimitPeriodMillis;
+    private final LinkedList<Long> lastRequests = new LinkedList<>();
 
     private final DisposableHttpClient httpClient;
 
-    JiraIntegrationFeatures(URI serverUri, String username, String password, int socketTimeoutSeconds, int searchQueryBatch) {
+    JiraIntegrationFeatures(URI serverUri, String username, String password, int socketTimeoutSeconds, int searchQueryBatch,
+                            int requestsLimitCount, int requestsLimitPeriodSeconds)
+    {
         this.serverUri = serverUri;
         this.socketTimeoutSeconds = socketTimeoutSeconds;
         this.searchQueryBatch = searchQueryBatch;
-        this.authenticationHandler = new BasicHttpAuthenticationHandler(username, password);
-        this.httpClient = getHttpClient(serverUri, authenticationHandler);
+        this.httpClient = getHttpClient(serverUri, new BasicHttpAuthenticationHandler(username, password));
         this.jiraClient = new AsynchronousJiraRestClient(serverUri, httpClient);
+        this.requestsLimitCount = requestsLimitCount;
+        this.requestsLimitPeriodMillis = requestsLimitPeriodSeconds * 1000L;
     }
 
 
@@ -83,37 +104,40 @@ public class JiraIntegrationFeatures implements IntegrationFeatures {
     private final GenericJsonArrayParser<IssueType> issueTypesParser = GenericJsonArrayParser.create(new IssueTypeJsonParser());
     private final GenericJsonArrayParser<CimFieldInfo> CIM_ISSUE_TYPE_JSON_PARSER = GenericJsonArrayParser.create(new CimFieldsInfoJsonParser());
 
-
     private List<CimIssueType> getIssueTypes(String projectKey) {
         // calling the Jira REST API directly as JIRA v. 9.x dropped support for createmeta endpoint (https://confluence.atlassian.com/jiracore/preparing-for-jira-9-0-1115661092.html)
         try {
             String uri = serverUri + "/rest/api/2/issue/createmeta/" + projectKey + "/issuetypes/";
-            Response issueTypes = httpClient.newRequest(uri).get().get();
+            Response issueTypes = withinRequestsCountLimit(() -> httpClient.newRequest(uri).get()).get();
             PageJsonParser<IssueType> pages = new PageJsonParser<>(issueTypesParser);
             Page<IssueType> values = pages.parse(new JSONObject(issueTypes.getEntity()));
-            return StreamSupport.stream(values.getValues().spliterator(), false).map(i -> {
-                try {
-                    Response cimIssueTypeRaw = httpClient.newRequest(uri + i.getId()).get().get();
-                    PageJsonParser<CimFieldInfo> cimPages = new PageJsonParser<>(CIM_ISSUE_TYPE_JSON_PARSER);
-                    JSONObject json = new JSONObject(cimIssueTypeRaw.getEntity());
-                    Page<CimFieldInfo> cimValues = cimPages.parse(json);
-                    AtomicInteger index = new AtomicInteger(0);
-                    JSONArray array = json.getJSONArray("values");
-                    Map<String, CimFieldInfo> fields = StreamSupport.stream(cimValues.getValues().spliterator(), false).map(c -> {
-                        // taking the fieldId directly from JSON as it is not bound to the CimFieldInfo object
-                        try {
-                            String id = ((JSONObject) array.get(index.getAndIncrement())).get("fieldId").toString();
-                            return new CimFieldInfo(id, c.isRequired(), c.getName(), c.getSchema(), c.getOperations(), c.getAllowedValues(), c.getAutoCompleteUri());
-                        } catch (JSONException e) {
-                            throw new RuntimeException(e);
-                        }
-                    }).collect(Collectors.toMap(CimFieldInfo::getName, f -> f));
+            return StreamSupport.stream(values.getValues().spliterator(), false)
+                    .map(i -> parseIssueType(i, uri))
+                    .collect(Collectors.toList());
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
 
-                    return new CimIssueType(i.getIconUri(), i.getId(), i.getName(), i.isSubtask(), i.getDescription(), i.getIconUri(), fields);
-                } catch (Exception e) {
+    private CimIssueType parseIssueType(IssueType i, String uri) {
+        try {
+            Response cimIssueTypeRaw = withinRequestsCountLimit(() -> httpClient.newRequest(uri + i.getId()).get()).get();
+            PageJsonParser<CimFieldInfo> cimPages = new PageJsonParser<>(CIM_ISSUE_TYPE_JSON_PARSER);
+            JSONObject json = new JSONObject(cimIssueTypeRaw.getEntity());
+            Page<CimFieldInfo> cimValues = cimPages.parse(json);
+            AtomicInteger index = new AtomicInteger(0);
+            JSONArray array = json.getJSONArray("values");
+            Map<String, CimFieldInfo> fields = StreamSupport.stream(cimValues.getValues().spliterator(), false).map(c -> {
+                // taking the fieldId directly from JSON as it is not bound to the CimFieldInfo object
+                try {
+                    String id = ((JSONObject) array.get(index.getAndIncrement())).get("fieldId").toString();
+                    return new CimFieldInfo(id, c.isRequired(), c.getName(), c.getSchema(), c.getOperations(), c.getAllowedValues(), c.getAutoCompleteUri());
+                } catch (JSONException e) {
                     throw new RuntimeException(e);
                 }
-            }).collect(Collectors.toList());
+            }).collect(Collectors.toMap(CimFieldInfo::getName, f -> f));
+
+            return new CimIssueType(i.getIconUri(), i.getId(), i.getName(), i.isSubtask(), i.getDescription(), i.getIconUri(), fields);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -128,7 +152,7 @@ public class JiraIntegrationFeatures implements IntegrationFeatures {
      */
     public BasicComponent getComponent(String projectKey, String componentName) {
         return StreamSupport.stream(projectCache.computeIfAbsent(projectKey,
-                                p -> jiraClient.getProjectClient().getProject(p).claim())
+                                p -> withinRequestsCountLimit(() -> jiraClient.getProjectClient().getProject(p).claim()))
                         .getComponents()
                         .spliterator(), false)
                 .filter(i -> Objects.equals(i.getName(), componentName))
@@ -138,13 +162,34 @@ public class JiraIntegrationFeatures implements IntegrationFeatures {
     }
 
     /**
+     * Creates a Jira issue according to specified {@link IssueInput}
+     * Returns the created {@link BasicIssue}
+     *
+     * @param input {@link IssueInput} to create issue
+     * @return created {@link BasicIssue}
+     */
+    public BasicIssue createIssue(IssueInput input) {
+        return withinRequestsCountLimit(() -> jiraClient.getIssueClient().createIssue(input).claim());
+    }
+
+    /**
+     * Updates an existing a Jira issue according to specified {@link IssueInput}
+     *
+     * @param issueKey unique Jira issue key
+     * @param input    {@link IssueInput} to update existing Jira issue
+     */
+    public void updateIssue(String issueKey, IssueInput input) {
+        withinRequestsCountLimit(() -> jiraClient.getIssueClient().updateIssue(issueKey, input).claim());
+    }
+
+    /**
      * Returns a single Jira issue with all available fields specified by Jira Issue key
      *
      * @param issueKey String issue key
      * @return Jira issue matching the specified key
      */
     public Issue getIssue(String issueKey) {
-        return jiraClient.getIssueClient().getIssue(issueKey).claim();
+        return withinRequestsCountLimit(() -> jiraClient.getIssueClient().getIssue(issueKey).claim());
     }
 
     /**
@@ -156,7 +201,6 @@ public class JiraIntegrationFeatures implements IntegrationFeatures {
     public List<Issue> searchForIssues(String jqlQuery) {
         return searchForIssues(jqlQuery, null);
     }
-
 
     /**
      * Returns a list of Jira issue keys returned by executing specified JQL query
@@ -203,9 +247,9 @@ public class JiraIntegrationFeatures implements IntegrationFeatures {
 
     private List<Issue> searchForIssues(String jqlQuery, Integer limit, Integer startAt, Set<String> fields) {
         try {
-            return StreamSupport.stream(jiraClient.getSearchClient()
+            return StreamSupport.stream(withinRequestsCountLimit(() -> jiraClient.getSearchClient()
                             .searchJql(jqlQuery, limit, startAt, fields)
-                            .claim()
+                            .claim())
                             .getIssues()
                             .spliterator(), false)
                     .collect(Collectors.toList());
@@ -234,5 +278,32 @@ public class JiraIntegrationFeatures implements IntegrationFeatures {
         HttpClientOptions options = new HttpClientOptions();
         options.setSocketTimeout(socketTimeoutSeconds, TimeUnit.SECONDS);
         return options;
+    }
+
+    private <T> T withinRequestsCountLimit(Supplier<T> operation) {
+        try {
+            if (requestsLimitCount > 0) {
+                synchronized (lastRequests) {
+                    long periodStart = System.currentTimeMillis() - requestsLimitPeriodMillis;
+                    lastRequests.removeIf(ts -> ts < periodStart);
+                    if (lastRequests.size() >= requestsLimitCount) {
+                        if (periodStart < lastRequests.getFirst()) {
+                            try {
+                                Thread.sleep(lastRequests.getFirst() - periodStart + 10);
+                            } catch (InterruptedException e) {
+                                throw new RuntimeException(e);
+                            }
+                        }
+                        lastRequests.removeFirst();
+                    }
+                    T result = operation.get();
+                    lastRequests.add(System.currentTimeMillis());
+                    return result;
+                }
+            }
+            return operation.get();
+        } catch (RestClientException re) {
+            throw new RuntimeException("Jira REST API request processing failed", re);
+        }
     }
 }

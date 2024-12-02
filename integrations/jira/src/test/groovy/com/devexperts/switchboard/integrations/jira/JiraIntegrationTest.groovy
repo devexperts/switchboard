@@ -118,7 +118,7 @@ class JiraIntegrationTest {
 
     private static JiraIntegrationFeatures getMockIntegrationFeatures() {
         JiraIntegrationFeatures features = new JiraIntegrationFeatures(new URI("https://jira.somwhere.elsewhere.com/"),
-                "login", "password", 300, 100)
+                "login", "password", 300, 100, 10, 10)
         JiraIntegrationFeatures featuresMock = Mockito.spy(features)
         Mockito.doReturn(OUTPUT_1).when(featuresMock).searchForIssueKeys(QUERY_1)
         Mockito.doReturn(OUTPUT_2).when(featuresMock).searchForIssueKeys(QUERY_2)
