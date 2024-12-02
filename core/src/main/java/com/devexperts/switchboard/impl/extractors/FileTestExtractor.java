@@ -75,13 +75,15 @@ public abstract class FileTestExtractor<F extends IntegrationFeatures> implement
         List<Test> tests = paths
                 .stream()
                 .map(Path::toFile)
-                .map(this::extractTests)
+                .map(f -> {
+                    List<Test> fileTests = extractTests(f);
+                    log.debug("Extracted {} tests from {}", fileTests.size(), f);
+                    return fileTests;
+                })
                 .flatMap(Collection::stream)
                 .collect(Collectors.toList());
         log.info("Extracted {} tests from {} files in {} millis", tests.size(), paths.size(), System.currentTimeMillis() - start);
-        if (log.isTraceEnabled()) {
-            log.trace("Extracted tests: {}\n\t", tests.stream().map(Test::getIdentifier).collect(Collectors.joining("\n\t")));
-        }
+        log.trace("Extracted tests: {}\n\t", tests.stream().map(Test::getIdentifier).collect(Collectors.joining("\n\t")));
         return tests;
     }
 }

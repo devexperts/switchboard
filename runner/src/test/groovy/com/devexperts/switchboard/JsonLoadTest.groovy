@@ -184,7 +184,6 @@ class JsonLoadTest {
         System.setProperty("some.jira_url-2", "https://jira.elsewhere.com")
         System.setProperty("login-2", "hiddenLogin2")
         System.setProperty("password-2", "hiddenPassword2")
-        System.setProperty("password-2", "hiddenPassword2")
         System.setProperty("login-3", "hiddenLogin3")
 
         Map<Integration, ClassLoader> integrations = JacksonUtils.parseIntegrations(res, urls)

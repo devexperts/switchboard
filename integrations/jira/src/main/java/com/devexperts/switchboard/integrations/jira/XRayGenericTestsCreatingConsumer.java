@@ -38,6 +38,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -53,6 +54,8 @@ import java.util.stream.StreamSupport;
  * exists for each test in TestSet and creating a new one if it does not exist
  */
 public class XRayGenericTestsCreatingConsumer implements TestRunConsumer<JiraIntegrationFeatures> {
+    private enum ProcessingStatus {CREATED, UPDATED, INPUT_DUPLICATE, JIRA_DUPLICATE, UPDATE_PROHIBITED}
+
     private static final Logger log = LoggerFactory.getLogger(XRayGenericTestsCreatingConsumer.class);
     private static final String GENERIC_TEST_DEFINITION_FIELD = "Generic Test Definition";
     private static final String JIRA_ISSUE_KEY_NAME = "key";
@@ -92,8 +95,7 @@ public class XRayGenericTestsCreatingConsumer implements TestRunConsumer<JiraInt
 
     public XRayGenericTestsCreatingConsumer(String identifier, String project, String issueTypeName, TestValuesExtractor summarySupplier,
                                             Map<String, TestValuesExtractor> fieldValuesExtractors, Map<String, TestValuesExtractor> defaultFieldValues,
-                                            boolean updateExisting, Pair<String, TestValuesExtractor> xrayFieldLinkToTestAttribute)
-    {
+                                            boolean updateExisting, Pair<String, TestValuesExtractor> xrayFieldLinkToTestAttribute) {
         this.identifier = identifier;
         this.project = project;
         this.issueTypeName = issueTypeName;
@@ -130,16 +132,48 @@ public class XRayGenericTestsCreatingConsumer implements TestRunConsumer<JiraInt
 
     @Override
     public Void accept(List<TestRun> testRuns) {
-        Map<IssueInput, Boolean> result = doAccept(testRuns);
-        log.info("Created/updated {} XRay issues", result.size());
+        Map<ProcessingStatus, List<IssueInput>> result = doAccept(testRuns);
+        StringBuilder sb = new StringBuilder(String.format("Processed %s tests. Execution result:",
+                result.values().stream().mapToInt(List::size).sum()))
+                .append(String.format("\r\n\t\t- created %s XRay issues",
+                        result.getOrDefault(ProcessingStatus.CREATED, new ArrayList<>()).size()))
+                .append(String.format("\r\n\t\t- updated %s XRay issues",
+                        result.getOrDefault(ProcessingStatus.UPDATED, new ArrayList<>()).size()));
+        if (result.containsKey(ProcessingStatus.INPUT_DUPLICATE)) {
+            sb.append(String.format("\r\n\t\t- %s tests not processed due to key duplication between supplied tests",
+                    result.get(ProcessingStatus.INPUT_DUPLICATE).size()));
+        }
+        if (result.containsKey(ProcessingStatus.JIRA_DUPLICATE)) {
+            sb.append(String.format("\r\n\t\t- %s tests not processed due to key duplication in Jira",
+                    result.get(ProcessingStatus.JIRA_DUPLICATE).size()));
+        }
+        if (result.containsKey(ProcessingStatus.UPDATE_PROHIBITED)) {
+            sb.append(String.format("\r\n\t\t- %s tests not processed due update not allowed",
+                    result.get(ProcessingStatus.UPDATE_PROHIBITED).size()));
+        }
+        log.info(sb.toString());
         return null;
     }
 
-    private Map<IssueInput, Boolean> doAccept(List<TestRun> testRuns) {
-        Map<IssueInput, Boolean> result = new HashMap<>();
+    private Map<ProcessingStatus, List<IssueInput>> doAccept(List<TestRun> testRuns) {
+        Map<ProcessingStatus, List<IssueInput>> result = new EnumMap<>(ProcessingStatus.class);
         for (TestRun testRun : testRuns) {
-            for (Test test : testRun.getTests()) {
-                String testMappingVal = testXrayMappingValueExtractor.apply(test);
+            Map<String, Set<Test>> testsByKey = testRun.getTests().stream()
+                    .collect(Collectors.groupingBy(t -> testXrayMappingValueExtractor.apply(t), Collectors.toSet()));
+            List<Map.Entry<String, Set<Test>>> duplicates = testsByKey.entrySet().stream().filter(t -> t.getValue().size() > 1).collect(Collectors.toList());
+            for (Map.Entry<String, Set<Test>> duplicate : duplicates) {
+                log.warn("Found tests in test run '{}' duplicated by '{}'='{}': {}",
+                        testRun.getIdentifier(), xrayMappingKey, duplicate.getKey(),
+                        duplicate.getValue().stream().map(XRayGenericTestsCreatingConsumer::getTestDefinition).collect(Collectors.joining(", ")));
+                for (Test test : duplicate.getValue()) {
+                    result.computeIfAbsent(ProcessingStatus.INPUT_DUPLICATE, k -> new ArrayList<>()).add(createInput(test));
+                }
+                testsByKey.remove(duplicate.getKey());
+            }
+
+            for (Map.Entry<String, Set<Test>> testWithKey : testsByKey.entrySet()) {
+                String testMappingVal = testWithKey.getKey();
+                Test test = testWithKey.getValue().iterator().next();
                 String testDefinition = getTestDefinition(test);
                 List<Issue> linked = (isMappedByJiraKey ?
                         existing.stream().filter(i -> i.getKey().equalsIgnoreCase(testMappingVal)) :
@@ -152,27 +186,27 @@ public class XRayGenericTestsCreatingConsumer implements TestRunConsumer<JiraInt
                         .collect(Collectors.toList());
                 IssueInput input = createInput(test);
                 if (linked.isEmpty()) {
-                    BasicIssue created = features.jiraClient.getIssueClient().createIssue(input).claim();
-                    log.info("Created test linked to {}: {}", testDefinition, created);
-                    result.put(input, true);
+                    BasicIssue created = features.createIssue(input);
+                    log.debug("Created test {}: {}", describeTestLink(testDefinition, testMappingVal), created.getKey());
+                    result.computeIfAbsent(ProcessingStatus.CREATED, k -> new ArrayList<>()).add(input);
                 } else if (updateExisting) {
                     if (linked.size() == 1) {
                         Issue singleFound = linked.get(0);
-                        log.info("Found existing test linked to {}: {} {}", testDefinition, singleFound.getKey(), singleFound.getSummary());
-                        features.jiraClient.getIssueClient().updateIssue(singleFound.getKey(), input).claim();
-                        result.put(input, true);
+                        features.updateIssue(singleFound.getKey(), input);
+                        log.debug("Updated existing test {}: {}", describeTestLink(testDefinition, testMappingVal), singleFound.getKey());
+                        result.computeIfAbsent(ProcessingStatus.UPDATED, k -> new ArrayList<>()).add(input);
                     } else {
-                        log.warn("Cannot update existing issues: multiple match. " +
-                                "Found {} issues linked to {} : {}", linked.size(), testDefinition, linked.stream());
-                        result.put(input, false);
+                        log.warn("Cannot update existing Jira issues: multiple match. Found {} issues {}: {}",
+                                linked.size(), describeTestLink(testDefinition, testMappingVal),
+                                linked.stream().map(BasicIssue::getKey).collect(Collectors.joining(", ")));
+                        result.computeIfAbsent(ProcessingStatus.JIRA_DUPLICATE, k -> new ArrayList<>()).add(input);
                     }
                 } else {
-                    String linkedIds = linked.stream()
-                            .map(BasicIssue::getId)
-                            .map(String::valueOf)
-                            .collect(Collectors.joining(", "));
-                    log.warn("Found {} issues linked to {} : {}", linked.size(), testDefinition, linkedIds);
-                    result.put(input, false);
+                    log.warn("Found {} issues {}: {}", linked.size(), describeTestLink(testDefinition, testMappingVal),
+                            linked.stream()
+                                    .map(BasicIssue::getKey)
+                                    .collect(Collectors.joining(", ")));
+                    result.computeIfAbsent(ProcessingStatus.UPDATE_PROHIBITED, k -> new ArrayList<>()).add(input);
                 }
             }
         }
@@ -184,6 +218,10 @@ public class XRayGenericTestsCreatingConsumer implements TestRunConsumer<JiraInt
                 test.getAttributes().getSingleAttributeValue(Attributes.LOCATION_PROP, "package").orElse(""),
                 test.getAttributes().getSingleAttributeValue(Attributes.LOCATION_PROP, "class").orElse(""),
                 test.getAttributes().getSingleAttributeValue(Attributes.LOCATION_PROP, "method").orElse(""));
+    }
+
+    private String describeTestLink(String testDefinition, String testMappingVal) {
+        return String.format("linked to %s by '%s'='%s'", testDefinition, xrayMappingKey, testMappingVal);
     }
 
     private IssueInput createInput(Test test) {
