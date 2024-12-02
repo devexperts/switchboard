@@ -100,7 +100,7 @@ class JiraIntegrationTest {
                 "Severity"    : new ConstantValuesExtractor("Functional"),
                 "Description" : new ConstantValuesExtractor(lorem),
                 "Test Type"   : new ConstantValuesExtractor("Automated")
-        ] as Map, false, null)
+        ] as Map, null, false, true)
         consumer.init(getMockIntegrationFeatures())
 
         ObjectMapper mapper = JacksonUtils.getMapper()

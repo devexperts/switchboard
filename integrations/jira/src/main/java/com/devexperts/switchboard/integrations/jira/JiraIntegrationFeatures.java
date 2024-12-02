@@ -72,8 +72,7 @@ public class JiraIntegrationFeatures implements IntegrationFeatures {
     private final DisposableHttpClient httpClient;
 
     JiraIntegrationFeatures(URI serverUri, String username, String password, int socketTimeoutSeconds, int searchQueryBatch,
-                            int requestsLimitCount, int requestsLimitPeriodSeconds)
-    {
+                            int requestsLimitCount, int requestsLimitPeriodSeconds) {
         this.serverUri = serverUri;
         this.socketTimeoutSeconds = socketTimeoutSeconds;
         this.searchQueryBatch = searchQueryBatch;
