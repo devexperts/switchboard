@@ -215,7 +215,7 @@ public class XRayGenericTestsCreatingConsumer implements TestRunConsumer<JiraInt
     }
 
     private IssueInputBuilder setField(Test test, IssueInputBuilder builder, String fieldName, TestValuesExtractor valuesExtractor,
-                                              Map<String, CimFieldInfo> fields)
+                                       Map<String, CimFieldInfo> fields)
     {
         String value = valuesExtractor.getTestValue(test);
         if (value == null) {
